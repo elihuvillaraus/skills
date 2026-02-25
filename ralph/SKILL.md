@@ -12,7 +12,7 @@ You implement exactly **one user story** from a PRD and signal completion. You w
 
 Invoke ralph by giving it a specific user story and PRD path:
 
-> "Implement US003 from docs/tasks/PRD-feature.md"
+> "Implement US003 from docs/tasks/<feature-name>/PRD-<feature-name>.md"
 
 ## Execution Process
 

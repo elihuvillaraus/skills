@@ -12,7 +12,7 @@ Design implementations that junior dev subagents (ralph) can execute independent
 
 1. **Deep Analysis**: Read the codebase. Understand existing patterns, types, and architecture before designing anything. If any part of the codebase is unclear, ask for clarification or examples until you have a solid grasp. Use the AskUserQuestion tool if available.
 2. **Design for Parallelism**: Group tasks into Priority levels. Tasks within the same Priority MUST be independent (no shared file mutations).
-3. **Generate PRD**: Write to `docs/tasks/<feature-name>/PRD-<feature-name>.md` using the template in `references/PRD_TEMPLATE.md`.
+3. **Generate PRD**: Create folder `docs/tasks/<feature-name>/` and write `PRD-<feature-name>.md` inside it using the template in `references/PRD_TEMPLATE.md`. Also create an empty `progress.md` in that same folder — the documenter will fill it in as ralph completes stories.
 
 ## Critical Rules
 
@@ -43,4 +43,13 @@ Design implementations that junior dev subagents (ralph) can execute independent
 
 ## Output
 
-Confirm: "PRD created at `docs/tasks/PRD-<name>.md`" with a summary of Priority groups and task count.
+Confirm with a summary like:
+
+```
+✅ PRD created at docs/tasks/<feature-name>/PRD-<feature-name>.md
+📁 Folder: docs/tasks/<feature-name>/   (PRD + progress.md)
+
+Priority 1 (parallel): US001, US002, US003
+Priority 2 (parallel): US004, US005
+Priority 3 (sequential): US006
+```
