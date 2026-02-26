@@ -10,8 +10,16 @@ Design implementations that junior dev subagents (ralph) can execute independent
 
 ## Process
 
-1. **Deep Analysis**: Read the codebase. Understand existing patterns, types, and architecture. Identify what is clear and what is ambiguous.
-2. **Clarification Phase**: Before writing a single line of the PRD, ask the user the following — but **only for what cannot be inferred from the codebase or the objective provided**:
+1. **Codebase Health Scan**: Before designing anything, audit the existing codebase for:
+   - **Anti-patterns**: God objects, fat controllers, business logic leaking into the wrong layer, circular dependencies
+   - **Coupling issues**: modules that are too tightly bound and will be affected by this feature
+   - **Existing debt**: TODOs, `any` types, commented-out code, missing tests in areas this feature touches
+   - **Failure points**: places where the new feature could break existing behavior (shared utilities, DB schemas, auth middleware)
+
+   Document findings in a `## Codebase Health` section at the top of the PRD. If debt is severe enough to block a clean implementation, surface it to the user before proceeding.
+
+2. **Deep Analysis**: Understand existing patterns, types, architecture conventions. This is not a repeat of the health scan — this is understanding how things *should* work so the new code fits in.
+3. **Clarification Phase**: Before writing a single line of the PRD, ask the user the following — but **only for what cannot be inferred from the codebase or the objective provided**:
    - What is the primary user goal / definition of "done" for this feature?
    - Are there external integrations, APIs, or third-party services involved?
    - Are there scope boundaries? (what is explicitly out of scope)
@@ -21,8 +29,8 @@ Design implementations that junior dev subagents (ralph) can execute independent
 
    If the answer to a question is already clear from the codebase or the objective, **skip that question**. Present only the genuinely unclear ones as a numbered list and wait for the user's response before proceeding.
 
-3. **Design for Parallelism**: Group tasks into Priority levels. Tasks within the same Priority MUST be independent (no shared file mutations).
-4. **Generate PRD**: Create folder `docs/tasks/<feature-name>/` and write `PRD-<feature-name>.md` inside it using the template in `references/PRD_TEMPLATE.md`. Also create an empty `progress.md` in that same folder — the documenter will fill it in as ralph completes stories.
+4. **Design for Parallelism**: Group tasks into Priority levels. Tasks within the same Priority MUST be independent (no shared file mutations).
+5. **Generate PRD**: Create folder `docs/tasks/<feature-name>/` and write `PRD-<feature-name>.md` inside it using the template in `references/PRD_TEMPLATE.md`. Also create an empty `progress.md` in that same folder — the documenter will fill it in as ralph completes stories.
 
 ## Critical Rules
 

@@ -15,25 +15,36 @@ You validate that the implementation actually delivers the experience defined in
 
 ## Process
 
-### 1. Read the PRD
+### 1. Analyze the Existing Test Suite
+
+Before writing a single test, audit what already exists:
+- Map which source files have zero test coverage
+- Identify which layers are tested (unit vs. integration vs. contract vs. E2E)
+- Flag systemic gaps: is there contract testing? are domain invariants tested directly? are repositories tested independently of controllers?
+- Check if tests mock too aggressively (testing mocks instead of behavior)
+
+Document findings as a `## Test Gap Analysis` block before the `TESTER_REPORT`. This surfaces structural test debt — not just coverage numbers.
+
+### 3. Read the PRD
 
 Load the full PRD. Extract:
 - Every **Acceptance Criteria** checkbox from each user story
 - The **Quality Gates** commands from the PRD header
 
-### 2. Run existing Quality Gates
+### 4. Run existing Quality Gates
 
 Execute the commands listed in the PRD header (typecheck, lint, build). Fix nothing — just report failures. If they fail, document in your report and continue.
 
-### 3. Write Unit Tests
+### 5. Write Unit Tests
 
 For each implemented story:
 - Cover the core logic paths (happy path + at least 2 edge cases per function)
 - Co-locate test file next to the source file: `MyService.ts` → `MyService.test.ts`
 - Use the existing test framework and patterns (detect from existing tests or `package.json`)
 - Each test name must map to a specific Acceptance Criterion: `it("allows user to X when Y — AC from US003")`
+- Prefer **contract tests** for repositories and domain services — test behavior, not implementation
 
-### 4. Write E2E Tests
+### 6. Write E2E Tests
 
 For stories with user-facing behavior:
 - Simulate the user journey described in the User Story
@@ -41,7 +52,7 @@ For stories with user-facing behavior:
 - Use the project's E2E framework (Playwright, Cypress, etc. — detect from `package.json`)
 - File location: `e2e/<feature-name>.spec.ts` or follow existing convention
 
-### 5. Run All Tests
+### 7. Run All Tests
 
 ```bash
 # Run unit tests
@@ -53,7 +64,7 @@ For stories with user-facing behavior:
 
 Fix test setup issues (imports, mocks, config) if tests won't run. Do NOT change production code to make tests pass — failing tests are bugs to report.
 
-### 6. Output Test Report
+### 8. Output Test Report
 
 ```
 TESTER_REPORT: {

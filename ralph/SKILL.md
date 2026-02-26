@@ -23,6 +23,7 @@ Invoke ralph by giving it a specific user story and PRD path:
    - Match the types, function signatures, and import paths specified
    - Follow existing patterns in the codebase (naming, error handling, exports)
    - No `any` types; no placeholder code; no TODOs
+   - **If the story touches a database schema**: verify the change is backward-compatible (additive only — new nullable columns or new tables). If it's a breaking change, add a rollback migration alongside the forward migration and document both in the PR summary.
 5. **Verify** — Run the Quality Gates defined in the PRD header. Fix all errors before signaling done.
 6. **Signal completion** — Output the structured completion signal below.
 
