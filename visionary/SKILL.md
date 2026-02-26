@@ -40,6 +40,31 @@ Launch the following agents **in parallel** via `/fleet`. Each writes a structur
 Prompt for each:
 > "You are the [role] on the board reviewing this product vision: [VISION]. Provide your structured brief covering [their key questions]. Be direct, opinionated, and flag risks clearly."
 
+**Save each brief immediately** after it's produced — do not wait for all six. Write each one to:
+
+```
+docs/epics/<epic-name>/board/business-analyst.md
+docs/epics/<epic-name>/board/marketer.md
+docs/epics/<epic-name>/board/user-rep.md
+docs/epics/<epic-name>/board/devils-advocate.md
+docs/epics/<epic-name>/board/tech-lead.md
+docs/epics/<epic-name>/board/compliance-advisor.md
+```
+
+Each file has this structure:
+```markdown
+# [Role] Brief — <Epic Name>
+_Date: YYYY-MM-DD_
+
+[Full brief content here]
+
+---
+_This document is part of the Board of Directors analysis for the [Epic Name] project._
+_It serves as a permanent foundation document alongside EPIC.md and USER-JOURNEY.md._
+```
+
+These files are **foundation documents** — they explain WHY decisions were made and capture the thinking behind the architecture. Any future architect, ralph, or team member can read them to understand the strategic context.
+
 ---
 
 ## Phase 3 — Synthesis
@@ -113,9 +138,18 @@ After the EPIC is written, invoke `@user-journey`:
 Confirm with:
 
 ```
-✅ EPIC created: docs/epics/<epic-name>/EPIC-<epic-name>.md
-👥 Board briefs: 6 perspectives synthesized
-🗺️  User journeys: docs/epics/<epic-name>/USER-JOURNEY.md
+✅ EPIC created:        docs/epics/<epic-name>/EPIC-<epic-name>.md
+📋 Board briefs saved:  docs/epics/<epic-name>/board/  (6 files)
+🗺️  User journeys:      docs/epics/<epic-name>/USER-JOURNEY.md
+📄 Progress log:        docs/epics/<epic-name>/progress.md
+
+Foundation documents (permanent strategic context):
+  board/business-analyst.md   — viability, revenue model, unit economics
+  board/marketer.md           — GTM, ICP, positioning, channels
+  board/user-rep.md           — jobs-to-be-done, pain points, delight
+  board/devils-advocate.md    — failure modes, risks, assumptions
+  board/tech-lead.md          — stack, build vs buy, bottlenecks
+  board/compliance-advisor.md — payments, privacy, regulations
 
 PRD Roadmap:
   Phase 1: PRD-shared-infra
