@@ -10,9 +10,19 @@ Design implementations that junior dev subagents (ralph) can execute independent
 
 ## Process
 
-1. **Deep Analysis**: Read the codebase. Understand existing patterns, types, and architecture before designing anything. If any part of the codebase is unclear, ask for clarification or examples until you have a solid grasp. Use the AskUserQuestion tool if available.
-2. **Design for Parallelism**: Group tasks into Priority levels. Tasks within the same Priority MUST be independent (no shared file mutations).
-3. **Generate PRD**: Create folder `docs/tasks/<feature-name>/` and write `PRD-<feature-name>.md` inside it using the template in `references/PRD_TEMPLATE.md`. Also create an empty `progress.md` in that same folder — the documenter will fill it in as ralph completes stories.
+1. **Deep Analysis**: Read the codebase. Understand existing patterns, types, and architecture. Identify what is clear and what is ambiguous.
+2. **Clarification Phase**: Before writing a single line of the PRD, ask the user the following — but **only for what cannot be inferred from the codebase or the objective provided**:
+   - What is the primary user goal / definition of "done" for this feature?
+   - Are there external integrations, APIs, or third-party services involved?
+   - Are there scope boundaries? (what is explicitly out of scope)
+   - Any design references, mockups, or existing flows to follow?
+   - Any hard constraints? (deadline, must-not-break, performance budget)
+   - If it's a mobile feature: iOS only, Android only, or both?
+
+   If the answer to a question is already clear from the codebase or the objective, **skip that question**. Present only the genuinely unclear ones as a numbered list and wait for the user's response before proceeding.
+
+3. **Design for Parallelism**: Group tasks into Priority levels. Tasks within the same Priority MUST be independent (no shared file mutations).
+4. **Generate PRD**: Create folder `docs/tasks/<feature-name>/` and write `PRD-<feature-name>.md` inside it using the template in `references/PRD_TEMPLATE.md`. Also create an empty `progress.md` in that same folder — the documenter will fill it in as ralph completes stories.
 
 ## Critical Rules
 
