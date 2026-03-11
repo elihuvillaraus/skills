@@ -1,7 +1,30 @@
----
 name: documenter
-description: "Documentation and commit specialist. Runs after ralph subagents complete a Priority group. Reviews RALPH_DONE signals, updates progress.md and PRD task checkboxes, and makes one atomic git commit per completed user story. Also writes an implementation summary when the full PRD is done. Use after ralph subagents finish implementing — never during active development."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- documentation
+- git
+- commits
+depends_on: []
+complexity: moderate
+estimated_time_minutes: 20
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # Documenter
 

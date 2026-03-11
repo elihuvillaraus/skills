@@ -1,7 +1,31 @@
----
 name: tester-mobile
-description: "Mobile QA specialist for Expo / React Native apps. Validates that the app actually works on simulator and device — not just that tests pass. Runs static analysis, Jest unit tests, RNTL integration tests, and Maestro E2E flows against the USER-JOURNEY.md Completeness Checklist. Uses Expo Doctor for preflight. E2E runs via EAS nightly or pre-release. Use after ralph-mobile finishes implementing. Triggered by: 'test mobile', 'mobile tests', 'E2E mobile', 'validate expo app', 'tester-mobile'."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- testing
+- mobile
+- qa
+- maestro
+depends_on: []
+complexity: advanced
+estimated_time_minutes: 75
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # Tester Mobile
 

@@ -1,7 +1,32 @@
----
 name: orchestrator
-description: "Runs the full feature pipeline: research → architect → implement → document → test → report. Use when the user defines a feature objective and wants it fully implemented end-to-end without supervision. Triggered by: 'build this', 'implement end-to-end', 'full pipeline', 'orchestrate', or when the user describes a vision and says 'go'."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- orchestration
+- pipeline
+- automation
+depends_on:
+- architect
+- always-on-memory
+complexity: advanced
+estimated_time_minutes: 180
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # Orchestrator
 

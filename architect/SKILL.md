@@ -1,7 +1,31 @@
----
 name: architect
-description: "System Architect that creates parallelizable PRDs with junior-proof technical specs. Use when planning features, designing implementations, or when the user says 'plan', 'architect', 'design', or 'PRD'. Outputs PRDs organized in Priority groups where tasks within each group can be executed in parallel by independent dev subagents (ralph). Each user story includes file ownership, technical specs, and acceptance criteria detailed enough for a Sonnet-class model to implement without clarification."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- architecture
+- planning
+- prd
+- parallelism
+depends_on: []
+complexity: advanced
+estimated_time_minutes: 60
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # Architect Skill
 

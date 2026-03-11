@@ -1,7 +1,31 @@
----
 name: ralph-mobile
-description: "Autonomous mobile dev subagent that implements a single user story from a PRD for Expo / React Native apps. Use when you need parallel, independent mobile implementation tasks — screens, native components, data fetching, navigation. Designed to run alongside other ralph-mobile instances. Receives a specific task ID and PRD path. Returns a structured completion signal. Does NOT commit or modify the PRD — those are handled by the documenter. Loads expo, building-native-ui, vercel-react-native-skills, native-data-fetching, and expo-dev-client skills automatically."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- implementation
+- mobile
+- react-native
+- expo
+depends_on: []
+complexity: advanced
+estimated_time_minutes: 45
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # Ralph Mobile
 

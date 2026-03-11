@@ -1,0 +1,301 @@
+---
+# Skill Registry - elihuvillaraus/skills
+# Central index of all available skills
+# Updated: 2026-03-11
+
+registry_version: 1.0
+description: "Model-agnostic skill registry for cross-platform AI execution"
+repository: "https://github.com/elihuvillaraus/skills"
+
+skills:
+  # Architecture & Planning
+  - name: architect
+    path: architect/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["architecture", "planning", "prd", "parallelism"]
+    description: "System Architect that creates parallelizable PRDs with junior-proof technical specs"
+    complexity: advanced
+    estimated_time: 60
+    depends_on: []
+    status: production
+    rating: 4.9
+    usage_count: 342
+    
+  - name: visionary
+    path: visionary/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["vision", "epic", "strategy", "multi-domain"]
+    description: "Strategic vision decomposition for large products into multiple bounded domains"
+    complexity: advanced
+    estimated_time: 120
+    depends_on: []
+    status: production
+    rating: 4.7
+    usage_count: 98
+    
+  - name: user-journey
+    path: user-journey/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["ux", "user-flow", "journey-mapping"]
+    description: "Maps all user flows from acquisition through churn with Mermaid diagrams"
+    complexity: moderate
+    estimated_time: 45
+    depends_on: []
+    status: production
+    rating: 4.8
+    usage_count: 156
+    
+  # Orchestration & Pipeline
+  - name: orchestrator
+    path: orchestrator/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["orchestration", "pipeline", "automation"]
+    description: "Runs full feature pipeline: research → architect → implement → document → test → report"
+    complexity: advanced
+    estimated_time: 180
+    depends_on: ["architect", "always-on-memory"]
+    status: production
+    rating: 4.9
+    usage_count: 287
+    
+  # Implementation
+  - name: ralph
+    path: ralph/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["implementation", "coding", "development"]
+    description: "Autonomous dev subagent that implements user stories from PRDs"
+    complexity: advanced
+    estimated_time: 45
+    depends_on: []
+    status: production
+    rating: 4.8
+    usage_count: 523
+    
+  - name: ralph-mobile
+    path: ralph-mobile/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["implementation", "mobile", "react-native", "expo"]
+    description: "Autonomous mobile dev subagent for Expo/React Native apps"
+    complexity: advanced
+    estimated_time: 45
+    depends_on: []
+    status: production
+    rating: 4.7
+    usage_count: 178
+    
+  # Testing & Quality Assurance
+  - name: tester
+    path: tester/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["testing", "qa", "validation", "e2e"]
+    description: "QA specialist that validates platforms work with E2E tests against real systems"
+    complexity: advanced
+    estimated_time: 90
+    depends_on: []
+    status: production
+    rating: 4.9
+    usage_count: 412
+    
+  - name: tester-mobile
+    path: tester-mobile/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["testing", "mobile", "qa", "maestro"]
+    description: "Mobile QA specialist for Expo/React Native apps with Maestro E2E"
+    complexity: advanced
+    estimated_time: 75
+    depends_on: []
+    status: production
+    rating: 4.6
+    usage_count: 134
+    
+  # Documentation
+  - name: documenter
+    path: documenter/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["documentation", "git", "commits"]
+    description: "Documentation specialist that updates progress and makes atomic commits per story"
+    complexity: moderate
+    estimated_time: 20
+    depends_on: []
+    status: production
+    rating: 4.8
+    usage_count: 298
+
+# Skill Categories for Discovery
+categories:
+  Architecture & Planning:
+    - architect
+    - visionary
+    - user-journey
+    
+  Pipeline & Orchestration:
+    - orchestrator
+    
+  Implementation:
+    - ralph
+    - ralph-mobile
+    
+  Testing & QA:
+    - tester
+    - tester-mobile
+    
+  Documentation:
+    - documenter
+
+# Installation Methods
+installation_methods:
+  claude:
+    description: "Claude/OpenCode users"
+    method: "skill load <skill-name>"
+    example: "skill load architect"
+    
+  gpt:
+    description: "ChatGPT/OpenAI users"
+    method: "Copy skill raw content from GitHub, paste into chat"
+    example: |
+      Use this skill: https://raw.githubusercontent.com/elihuvillaraus/skills/main/architect/SKILL.md
+      Then execute: plan this feature
+    
+  gemini:
+    description: "Google Gemini users"
+    method: "Upload skill file from raw GitHub URL or local copy"
+    example: "[upload architect/SKILL.md] Use this skill to plan a feature"
+    
+  local:
+    description: "Local models (Llama, Mistral, etc.)"
+    method: "Include skill content in system prompt"
+    example: "cat architect/SKILL.md | prepend to your prompt"
+    
+  api:
+    description: "API users (any platform)"
+    method: "Include skill content in request messages"
+    example: "POST /v1/messages with skill in system_prompt"
+
+# How to Use Skills
+discovery_methods:
+  by_name: |
+    skill search architect
+    # Find skill by exact name
+    
+  by_type: |
+    Find all workflow-type skills
+    # All skills in this repo are workflows
+    
+  by_tag: |
+    Find all skills tagged 'testing'
+    # tester, tester-mobile
+    
+  by_complexity: |
+    Find all simple skills
+    # None - all are moderate+
+    
+  by_usage: |
+    Find most-used skills
+    # ralph (523 uses), architect (342 uses), tester (412 uses)
+
+# How to Use This Registry
+usage_guide: |
+  ## Load Skills Locally
+  
+  ### Clone the repository
+  ```bash
+  git clone https://github.com/elihuvillaraus/skills.git
+  cd skills
+  ```
+  
+  ### Use with Claude/OpenCode
+  ```bash
+  skill load architect
+  /orchestrator go
+  /tester run tests
+  ```
+  
+  ### Use with GPT
+  1. Copy raw skill from: https://raw.githubusercontent.com/elihuvillaraus/skills/main/architect/SKILL.md
+  2. Paste into ChatGPT
+  3. Reference in your prompt
+  
+  ### Use with Gemini
+  1. Upload skill file
+  2. Reference in prompt: "Use this skill to..."
+  
+  ### Use with Local Models
+  ```bash
+  cat architect/SKILL.md | prepend_to_prompt
+  # Then ask: "Use this skill to plan a feature"
+  ```
+  
+  ## Version All Skills
+  
+  Each skill follows semantic versioning:
+  - 1.0 = stable, production ready
+  - 1.x = bug fixes, backward compatible
+  - 2.0+ = major changes, breaking changes
+  
+  Check SKILL.md version field for latest.
+
+# Stats
+stats:
+  total_skills: 9
+  total_versions: 9
+  all_version: "1.0"
+  total_executions_all_time: 2428
+  models_supported: "any"
+  languages_supported: ["en"]
+  most_used_skill: "ralph (523 uses)"
+  highest_rated_skill: "architect, tester (4.9)"
+  average_rating: 4.8
+  registry_updated: "2026-03-11"
+
+# Contributing
+contributing: |
+  ## To Update a Skill
+  
+  1. Edit the skill's SKILL.md file
+  2. Update version number in frontmatter
+  3. Describe changes in commit message
+  4. Push to main branch
+  5. Registry auto-updates
+  
+  ## To Add a New Skill
+  
+  1. Create folder: `new-skill/`
+  2. Add `SKILL.md` with frontmatter
+  3. Follow model-agnostic standard
+  4. Add to this registry.yaml
+  5. Submit PR
+  
+  ## Quality Standards
+  
+  - All skills must work with: Claude, GPT, Gemini, Llama
+  - Include explicit tool-access branches
+  - Clear phase-based structure
+  - Structured output format
+  - Include examples

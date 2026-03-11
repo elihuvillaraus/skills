@@ -1,7 +1,31 @@
----
 name: tester
-description: "Testing specialist using GPT-5.3-Codex. Validates that platforms actually work — not just that tests pass. Runs environment preflight, smoke tests, integration tests, and Stagehand AI-powered E2E tests against the REAL running app. Validates USER-JOURNEY.md Completeness Checklist. If a human can find it in 1 minute, this must catch it first. Use after ralph finishes implementing. Triggered by: 'run tests', 'write tests', 'validate implementation', 'E2E', 'tester'."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- testing
+- qa
+- validation
+- e2e
+depends_on: []
+complexity: advanced
+estimated_time_minutes: 90
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # Tester
 

@@ -1,7 +1,31 @@
----
 name: visionary
-description: "Strategic vision decomposition for large, multi-domain products. Use when the user has a high-level business vision that needs to be broken into multiple PRDs, bounded domains, and an implementation roadmap. Launches a Board of Directors agent team (business analyst, marketer, user representative, devil's advocate, tech lead, compliance) to analyze the vision from all angles before producing an EPIC document. Triggers user-journey skill to map all user flows. Use when the user says 'I want to build', 'platform', 'full solution', 'vision', 'end-to-end product', or 'epic'."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- vision
+- epic
+- strategy
+- multi-domain
+depends_on: []
+complexity: advanced
+estimated_time_minutes: 120
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # Visionary
 

@@ -1,7 +1,30 @@
----
 name: user-journey
-description: "Maps all user flows for a product with extreme clarity — from first touch (marketing, acquisition) through auth, onboarding, core usage, payments, support, and churn. Produces a Mermaid flowchart diagram and a structured USER-JOURNEY.md document. This document becomes the 'north star': if any part of the system doesn't fulfill this journey, the product is incomplete. The tester validates against it, the architect designs for it, ralph implements it. Use when starting a new product, after a vision/epic is defined, or when the user says 'user flow', 'user journey', 'experience map', or 'how does the user...'."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- ux
+- user-flow
+- journey-mapping
+depends_on: []
+complexity: moderate
+estimated_time_minutes: 45
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # User Journey
 

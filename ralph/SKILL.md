@@ -1,7 +1,30 @@
----
 name: ralph
-description: "Autonomous dev subagent that implements a single user story from a PRD. Use when you need parallel, independent implementation of tasks. Designed to run as a subagent alongside other ralph instances. Receives a specific task ID and PRD path (e.g., 'Implement US003 from docs/tasks/PRD-feature.md'). Returns a structured completion signal. Does NOT commit or modify the PRD — those are handled by the documenter."
+type: workflow
+version: '1.0'
+models:
+- any
+languages:
+- en
+tags:
+- implementation
+- coding
+- development
+depends_on: []
+complexity: advanced
+estimated_time_minutes: 45
+input_requirements:
+- Access to codebase or requirements
+- Development context
+output_artifacts:
+- Generated documentation or code
+- Implementation artifacts
+success_criteria:
+- Workflow executed successfully
+- All phases completed
+- Expected output generated
 ---
+
+
 
 # Ralph
 
