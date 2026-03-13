@@ -11,6 +11,7 @@ A collection of **production-grade skills** for building products end-to-end:
 | Skill | Type | Purpose | Complexity |
 |-------|------|---------|-----------|
 | **architect** | workflow | Design parallelizable features with PRDs | Advanced |
+| **always-on-memory** | workflow | Preserve decisions, QA, and user tasks across the run | Moderate |
 | **orchestrator** | workflow | Run full pipeline: plan → build → test → ship | Advanced |
 | **ralph** | workflow | Autonomous implementation of user stories | Advanced |
 | **ralph-mobile** | workflow | Mobile implementation (Expo/React Native) | Advanced |
@@ -80,10 +81,11 @@ https://raw.githubusercontent.com/elihuvillaraus/skills/main/architect/SKILL.md
 skills/
 ├── README.md                 ← This file
 ├── registry.yaml            ← Central index
-├── SKILL-STANDARD.md        ← Format specification
 ├── SKILL-INTEGRATION-GUIDE.md ← How to use
 │
 ├── architect/
+│   └── SKILL.md
+├── always-on-memory/
 │   └── SKILL.md
 ├── orchestrator/
 │   └── SKILL.md
@@ -110,9 +112,10 @@ skills/
 ```
 You define objective
     ↓
-orchestrator loads architect + ralph + tester
+orchestrator loads always-on-memory + architect + ralph + tester
     ↓
-architect: Plans feature (PRD + decisions)
+architect: Plans feature
+always-on-memory: Captures decisions + QA + user tasks
     ↓
 ralph: Builds in parallel
 tester: Tests in parallel
@@ -230,7 +233,6 @@ Perfect sync, no compatibility issues
 ## Documentation
 
 - **[registry.yaml](./registry.yaml)** — Central index of all skills
-- **[SKILL-STANDARD.md](./SKILL-STANDARD.md)** — Format & how to create skills *(in root .agents folder)*
 - **[SKILL-INTEGRATION-GUIDE.md](./SKILL-INTEGRATION-GUIDE.md)** — How to use with different models *(in root .agents folder)*
 
 ## Troubleshooting
@@ -276,7 +278,7 @@ Want to improve a skill or add a new one?
 
 ## Stats
 
-- **Total Skills**: 9
+- **Total Skills**: 10
 - **All Versions**: 1.0 (stable)
 - **Average Rating**: 4.8/5
 - **Total Uses**: 2,400+

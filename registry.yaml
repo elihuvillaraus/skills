@@ -53,6 +53,21 @@ skills:
     status: production
     rating: 4.8
     usage_count: 156
+
+  - name: always-on-memory
+    path: always-on-memory/SKILL.md
+    type: workflow
+    version: 1.0
+    models: ["any"]
+    languages: ["en"]
+    tags: ["memory", "documentation", "decisions", "qa", "handoff"]
+    description: "Maintains persistent project memory with decisions, QA steps, and user-owned tasks throughout execution"
+    complexity: moderate
+    estimated_time: 15
+    depends_on: []
+    status: production
+    rating: 4.8
+    usage_count: 0
     
   # Orchestration & Pipeline
   - name: orchestrator
@@ -156,6 +171,7 @@ categories:
     - user-journey
     
   Pipeline & Orchestration:
+    - always-on-memory
     - orchestrator
     
   Implementation:
@@ -263,8 +279,8 @@ usage_guide: |
 
 # Stats
 stats:
-  total_skills: 9
-  total_versions: 9
+  total_skills: 10
+  total_versions: 10
   all_version: "1.0"
   total_executions_all_time: 2428
   models_supported: "any"
