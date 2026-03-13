@@ -170,7 +170,7 @@ Completeness Checklist: X items — this is the acceptance criteria for the full
 ⚠️  Gaps found (things not yet designed):
   - [list any stage with no designed solution yet]
 
-Next: share this with @architect so every PRD is designed against this journey.
+Next: share this with the architect skill so every PRD is designed against this journey.
 ```
 
 ---

@@ -34,9 +34,12 @@ You are the **pipeline supervisor**. You coordinate the full feature development
 
 ## Prerequisites
 
-This flow requires autopilot mode with all permissions granted:
-- Start the session with: `copilot --allow-all --max-autopilot-continues 50`
-- Or during a session: `/allow-all` then `Shift+Tab` to enter autopilot mode
+This flow works best when the agent has:
+- permission to read and write files
+- permission to run validation commands and tests
+- access to parallel subagents or parallel workstreams when the platform supports them
+
+If your platform does not support autonomous or parallel execution, run the same phases manually in order and keep the artifacts synchronized between phases.
 
 ---
 
@@ -44,22 +47,24 @@ This flow requires autopilot mode with all permissions granted:
 
 ### Phase 1 — Research (parallel)
 
-Launch 4 `@researcher` subagents simultaneously, each investigating one angle:
+Run 4 parallel research tracks (use subagents if your platform supports them; otherwise do 4 clearly separated passes):
 
-| Subagent | Angle |
-|----------|-------|
-| researcher-1 | Technical feasibility: existing services, APIs, DB schema impact |
-| researcher-2 | UX/product: user journey, edge cases, error states |
-| researcher-3 | Codebase patterns: conventions, reusable components, anti-patterns to avoid |
-| researcher-4 | Risks: breaking changes, performance, security, scope creep |
+| Track | Angle |
+|-------|-------|
+| Research 1 | Technical feasibility: existing services, APIs, DB schema impact |
+| Research 2 | UX/product: user journey, edge cases, error states |
+| Research 3 | Codebase patterns: conventions, reusable components, anti-patterns to avoid |
+| Research 4 | Risks: breaking changes, performance, security, scope creep |
 
-Wait for all 4 to complete. Synthesize their findings into a **Research Summary** (keep it — architect will need it).
+Wait for all 4 to complete. Synthesize their findings into a **Research Summary**.
+
+Initialize **always-on-memory** at this stage and keep `docs/ALWAYS-ON-MEMORY.md`, `docs/USER-QA.md`, and `docs/USER-TASKS.md` updated as the pipeline progresses.
 
 ---
 
 ### Phase 2 — Architecture
 
-Pass the Research Summary + user's original objective to `@architect`.
+Pass the Research Summary + user's original objective to the **architect** skill.
 
 The architect will:
 1. Ask clarifying questions if needed
@@ -77,7 +82,7 @@ For each Priority group in the PRD (execute sequentially between groups, paralle
 
 ```
 For Priority N (parallel):
-  Launch one @ralph subagent per user story in this group.
+  Launch one ralph subagent (or one independent implementation thread) per user story in this group.
   Each ralph receives: "Implement USxxx from docs/tasks/<feature-name>/PRD-<feature-name>.md"
   Wait for all RALPH_DONE or RALPH_BLOCKED signals.
   
@@ -88,7 +93,7 @@ Then immediately run Phase 4 (documentation) before starting Priority N+1.
 
 ### Phase 4 — Documentation (after each Priority group)
 
-Pass all `RALPH_DONE` signals from the completed group to `@documenter`.
+Pass all `RALPH_DONE` signals from the completed group to the **documenter** skill.
 
 The documenter will:
 - Update PRD checkboxes
@@ -101,7 +106,7 @@ Then proceed to the next Priority group (back to Phase 3).
 
 ### Phase 5 — Testing (after all priorities are done)
 
-Launch `@tester` with:
+Invoke the **tester** skill with:
 - The PRD path
 - The list of all modified files (from all RALPH_DONE signals)
 
@@ -146,15 +151,10 @@ Output a structured completion report to the user:
 
 ### Option A: Single prompt (recommended)
 
-Start your session with:
-```bash
-copilot --allow-all --max-autopilot-continues 50
-```
-
-Then switch to autopilot mode (`Shift+Tab`) and enter:
+Give your agent a prompt like:
 
 ```
-/fleet Implement the following feature end-to-end using the orchestrator pipeline:
+Use the orchestrator skill to implement the following feature end-to-end:
 
 **OBJECTIVE**: <your vision here>
 
@@ -167,7 +167,7 @@ Follow the orchestrator skill: research → architect → implement (parallel by
 
 ### Option B: Step by step (for more control)
 
-Use the same prompt but stay in interactive mode. The main agent will check in with you between phases.
+Use the same prompt but execute one phase at a time. The main agent can check in between phases for approval or clarification.
 
 ---
 
