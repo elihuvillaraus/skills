@@ -1,62 +1,504 @@
 # elihuvillaraus/skills
 
-**Model-Agnostic Skills Repository** — Reusable AI workflows that work with any LLM platform.
+> **Production AI workflows for GitHub Copilot CLI, Claude Code, and any LLM.**  
+> Installs as Copilot CLI skills, Claude Code agents, or paste-as-context into any AI.
 
-🚀 **Works with**: Claude | GPT | Gemini | Llama | Any AI Model
+---
 
-## What's Inside
+## Table of Contents
 
-A collection of **production-grade skills** for building products end-to-end:
+- [Architecture: Skills vs Agents](#architecture-skills-vs-agents)
+- [Installation](#installation)
+- [Installing on Another Computer](#installing-on-another-computer)
+- [All Skills by Category](#all-skills-by-category)
+- [Custom Agents](#custom-agents)
+- [Memory System](#memory-system)
+- [Using Skills as Agents](#using-skills-as-agents)
+- [The Full Pipeline](#the-full-pipeline)
 
-| Skill | Type | Purpose | Complexity |
-|-------|------|---------|-----------|
-| **architect** | workflow | Design parallelizable features with PRDs | Advanced |
-| **always-on-memory** | workflow | Preserve decisions, QA, and user tasks across the run | Moderate |
-| **orchestrator** | workflow | Run full pipeline: plan → build → test → ship | Advanced |
-| **ralph** | workflow | Autonomous implementation of user stories | Advanced |
-| **ralph-mobile** | workflow | Mobile implementation (Expo/React Native) | Advanced |
-| **tester** | workflow | E2E validation with real systems | Advanced |
-| **tester-mobile** | workflow | Mobile E2E testing with Maestro | Advanced |
-| **documenter** | workflow | Update progress, commit, document | Moderate |
-| **visionary** | workflow | Strategic vision → bounded domains | Advanced |
-| **user-journey** | workflow | Map complete user flows end-to-end | Moderate |
+---
 
-## Quick Start
+## Architecture: Skills vs Agents
 
-### For Claude/OpenCode Users
-```bash
-# Skills auto-load
-skill load architect
-/orchestrator go
-/tester run tests
+This repo uses two complementary concepts. **Always pick the right one:**
+
+### Skills — Knowledge injected into the main AI context
+
+```
+~/.copilot/skills/<name>/SKILL.md    <- Copilot CLI reads these
+~/.claude/skills/<name>/SKILL.md     <- Claude Code reads these (compatible)
 ```
 
-### For GPT Users
+| Property | Skill |
+|---|---|
+| **Lives in** | `~/.copilot/skills/` or `~/.claude/skills/` |
+| **Runs as** | Part of the main conversation context |
+| **Appears in** | `/skills` browser |
+| **Best for** | Domain expertise, decision frameworks, templates, checklists |
+| **Examples** | `architect`, `copywriting`, `seo-audit`, `eng-frontend` |
+
+### Agents — Independent subprocesses with their own context
+
 ```
-1. Copy raw skill: https://raw.githubusercontent.com/elihuvillaraus/skills/main/architect/SKILL.md
-2. Paste into ChatGPT
-3. Request: "Use this skill to plan a feature"
+~/.claude/agents/<name>.md           <- Read by BOTH Claude Code AND Copilot CLI
+.github/agents/<name>.md             <- Project-level agents (both tools read this)
 ```
 
-### For Gemini Users
+| Property | Agent |
+|---|---|
+| **Lives in** | `~/.claude/agents/` (global) or `.github/agents/` (project) |
+| **Runs as** | Isolated subprocess with its own model, context, and memory |
+| **Appears in** | `/agent` browser |
+| **Launched via** | `task(agent_type="name", prompt="...")` |
+| **Best for** | Autonomous workers, parallel execution, long-running tasks |
+| **Examples** | `ralph`, `documenter`, `ui-ux-designer` |
+
+### Decision Guide: When to Use Each
+
 ```
-1. Upload skill file
-2. Ask: "Use this skill to plan a feature"
+Need domain knowledge injected into current conversation?
+  -> SKILL
+
+Need to run something autonomously in a separate context window?
+  -> AGENT
+
+Need to run multiple things in parallel?
+  -> MULTIPLE AGENTS (they're isolated, safe to parallelize)
+
+Need a decision framework or checklist?
+  -> SKILL
+
+Need to implement code, make commits, or run long tasks?
+  -> AGENT
 ```
 
-### For Local Model Users
-```bash
-cat architect/SKILL.md | include-in-prompt
-# Then ask: "Use this skill to..."
-```
+---
 
 ## Installation
 
-### Clone the Repository
+### Copilot CLI Skills (global)
+
 ```bash
-git clone https://github.com/elihuvillaraus/skills.git
-cd skills
+git clone https://github.com/elihuvillaraus/skills.git /tmp/my-skills
+cp -r /tmp/my-skills/*/ ~/.copilot/skills/
 ```
+
+### Claude Code Skills (global)
+
+```bash
+git clone https://github.com/elihuvillaraus/skills.git /tmp/my-skills
+mkdir -p ~/.claude/skills
+cp -r /tmp/my-skills/*/ ~/.claude/skills/
+```
+
+### Custom Agents (works with both Claude Code AND Copilot CLI)
+
+```bash
+mkdir -p ~/.claude/agents
+cp /tmp/my-skills/agents/*.md ~/.claude/agents/
+```
+
+### Install Everything at Once
+
+```bash
+git clone https://github.com/elihuvillaraus/skills.git /tmp/my-skills
+mkdir -p ~/.copilot/skills ~/.claude/skills ~/.claude/agents
+cp -r /tmp/my-skills/*/ ~/.copilot/skills/
+cp -r /tmp/my-skills/*/ ~/.claude/skills/
+cp /tmp/my-skills/agents/*.md ~/.claude/agents/ 2>/dev/null || true
+```
+
+---
+
+## Installing on Another Computer
+
+One-liner that installs all skills for Copilot CLI + Claude Code:
+
+```bash
+git clone https://github.com/elihuvillaraus/skills.git /tmp/skills \
+  && mkdir -p ~/.copilot/skills ~/.claude/skills ~/.claude/agents \
+  && cp -r /tmp/skills/*/ ~/.copilot/skills/ \
+  && cp -r /tmp/skills/*/ ~/.claude/skills/ \
+  && cp /tmp/skills/agents/*.md ~/.claude/agents/ 2>/dev/null
+echo "Done"
+```
+
+After installing, open a new session — skills appear in `/skills` and agents appear in `/agent`.
+
+---
+
+## All Skills by Category
+
+### Pipeline and Orchestration
+
+| Skill | Description |
+|---|---|
+| `orchestrator` | Full pipeline: plan to build to test to ship. Assembles any team of specialists. |
+| `architect` | Creates parallelizable PRDs with junior-proof technical specs |
+| `always-on-memory` | Persistent memory across sessions — writes to AGENTS.md |
+| `multi-ai-memory` | Syncs memory across Claude, Gemini, and Copilot |
+| `agent-decision-guide` | Decision framework: skill vs agent, with full roster |
+| `agency-orchestrator` | Multi-department agency coordinator |
+| `team-startup` | Assembles: frontend + backend + growth + rapid-proto + tester |
+| `team-marketing-campaign` | Assembles: content + social + analytics team |
+| `team-enterprise-feature` | Assembles: pm + senior engineer + designer + evidence team |
+| `team-paid-media` | Assembles: paid media full-stack team |
+| `team-product-discovery` | Assembles: full discovery team (research to ship) |
+| `agentic-trust` | Safety and trust framework for multi-agent systems |
+| `visionary` | Strategic vision to bounded domains |
+
+### Engineering
+
+| Skill | Description |
+|---|---|
+| `eng-frontend` | Expert frontend (React, React Native, TypeScript, Expo) |
+| `eng-backend` | Backend architect (APIs, databases, infra) |
+| `eng-senior` | Senior dev: code quality, architecture decisions |
+| `eng-ai` | AI/ML engineer: models, embeddings, RAG, LLM integration |
+| `rapid-proto` | Ship fast, validate quickly — prototype mindset |
+| `code-reviewer` | High signal-to-noise code review — bugs only |
+| `devops` | CI/CD, Docker, GitHub Actions, infra automation |
+| `security-eng` | Security audit, threat modeling, hardening |
+| `data-eng` | Data pipelines, ETL, analytics infrastructure |
+| `sre` | Reliability, monitoring, incident response |
+| `tech-writer` | Technical documentation, READMEs, API docs |
+| `mobile-builder` | Mobile app (Expo/React Native) specialist |
+| `software-architect` | System design, architecture patterns |
+| `mcp-builder` | Build MCP servers and tools |
+| `db-optimizer` | Database performance and query optimization |
+| `frontend-design` | Production-grade frontend interfaces |
+| `building-native-ui` | Native mobile UI with Expo Router |
+| `expo-dev-client` | Expo dev client builds and distribution |
+| `native-data-fetching` | React Native data fetching patterns |
+| `remotion-best-practices` | Video generation with Remotion |
+| `vercel-react-best-practices` | Vercel + React patterns |
+| `vercel-react-native-skills` | Vercel + React Native |
+| `vercel-composition-patterns` | Vercel composition and deployment |
+| `use-dom` | DOM manipulation patterns |
+| `image-prompt-eng` | AI image prompt engineering |
+
+### Design and UX
+
+| Skill | Description |
+|---|---|
+| `ux-architect` | UX architecture and information design |
+| `ui-designer` | UI design, component systems, visual hierarchy |
+| `ux-researcher` | User research, interviews, synthesis |
+| `brand-guardian` | Brand consistency and voice |
+| `visual-storyteller` | Data visualization and visual narrative |
+| `web-design-guidelines` | Web design best practices |
+| `whimsy-injector` | Add delight and personality to interfaces |
+| `app-icon` | App icon generation (iOS/Android) |
+
+### Marketing and Content
+
+| Skill | Description |
+|---|---|
+| `content-creator` | Content creation strategy and execution |
+| `content-strategy` | Content planning and editorial calendar |
+| `copywriting` | Marketing copy for pages and campaigns |
+| `copy-editing` | Edit and refine existing marketing copy |
+| `growth-hacker` | Growth experiments, acquisition loops |
+| `seo-specialist` | On-page SEO and keyword strategy |
+| `seo-audit` | Technical and content SEO audit |
+| `programmatic-seo` | Programmatic SEO at scale |
+| `social-strategist` | Social media strategy |
+| `social-content` | Social content creation |
+| `twitter-engager` | Twitter/X engagement and growth |
+| `reddit-builder` | Reddit community building |
+| `instagram-curator` | Instagram strategy and curation |
+| `tiktok-strategist` | TikTok content and growth |
+| `podcast-strategist` | Podcast strategy and distribution |
+| `linkedin-creator` | LinkedIn content and thought leadership |
+| `marketing-ideas` | Marketing ideation and brainstorming |
+| `marketing-psychology` | Psychology-backed marketing tactics |
+| `email-sequence` | Email sequences and drip campaigns |
+| `launch-strategy` | Product launch planning |
+| `free-tool-strategy` | Engineering as marketing |
+| `competitor-alternatives` | Competitor comparison pages |
+
+### Paid Media
+
+| Skill | Description |
+|---|---|
+| `paid-media-auditor` | Full paid media account audit |
+| `ppc-strategist` | PPC strategy and bid management |
+| `ad-creative` | Ad creative strategy |
+| `paid-social` | Paid social campaigns |
+| `paid-ads` | Paid advertising generalist |
+| `search-query-analyst` | Search query analysis and optimization |
+| `tracking-specialist` | Attribution, pixels, conversion tracking |
+
+### CRO and Revenue
+
+| Skill | Description |
+|---|---|
+| `page-cro` | Landing page conversion optimization |
+| `signup-flow-cro` | Signup and onboarding CRO |
+| `paywall-upgrade-cro` | Paywall and upgrade flow optimization |
+| `popup-cro` | Popup and modal CRO |
+| `form-cro` | Form optimization |
+| `onboarding-cro` | In-app onboarding optimization |
+| `pricing-strategy` | Pricing models and strategy |
+| `referral-program` | Referral program design |
+| `ab-test-setup` | A/B test design and implementation |
+| `analytics-tracking` | Analytics implementation (GA4, GTM) |
+| `schema-markup` | Structured data and schema markup |
+
+### Product
+
+| Skill | Description |
+|---|---|
+| `pm-sprint` | Sprint prioritization and planning |
+| `pm-feedback` | User feedback synthesis |
+| `trend-researcher` | Market trends and competitive intel |
+| `nudge-engine` | Behavioral nudge design |
+| `discovery-coach` | Product discovery facilitation |
+| `product-marketing-context` | Product-market fit context |
+| `exec-summary` | Executive summaries |
+
+### Project Management
+
+| Skill | Description |
+|---|---|
+| `project-shepherd` | Project health and delivery tracking |
+| `senior-pm` | Senior PM: stakeholder management |
+| `experiment-tracker` | Experiment logging and analysis |
+| `studio-producer` | Creative production management |
+
+### Sales
+
+| Skill | Description |
+|---|---|
+| `sales-coach` | Sales coaching and objection handling |
+| `deal-strategist` | Deal strategy and negotiation |
+| `outbound-strategist` | Outbound prospecting |
+| `proposal-strategist` | Proposal writing and strategy |
+| `pipeline-analyst` | Pipeline analysis and forecasting |
+
+### Testing and Quality
+
+| Skill | Description |
+|---|---|
+| `tester` | E2E validation with real systems |
+| `tester-mobile` | Mobile E2E testing with Maestro |
+| `reality-checker` | Validates assumptions and edge cases |
+| `evidence-collector` | Gathers proof, screenshots, metrics |
+| `a11y-auditor` | Accessibility audit (WCAG) |
+| `perf-benchmarker` | Performance benchmarking |
+| `api-tester` | API testing and validation |
+
+### Support and Operations
+
+| Skill | Description |
+|---|---|
+| `support-responder` | Customer support responses |
+| `analytics-reporter` | Analytics reporting and insights |
+| `finance-tracker` | Financial tracking and reporting |
+| `infra-maintainer` | Infrastructure maintenance |
+
+### Specialized
+
+| Skill | Description |
+|---|---|
+| `dev-advocate` | Developer relations and advocacy |
+| `compliance-auditor` | Compliance and regulatory audit |
+| `app-store-optimizer` | App Store Optimization (ASO) |
+| `better-auth-best-practices` | Better Auth setup and configuration |
+| `create-auth-skill` | Scaffold authentication systems |
+| `find-skills` | Discover and install new skills |
+| `skill-creator` | Create new skills from scratch |
+
+### Pipeline Workers
+
+| Skill | Description |
+|---|---|
+| `ralph` | Autonomous dev subagent — implements one user story |
+| `ralph-mobile` | Mobile variant of ralph (Expo/React Native) |
+| `documenter` | Commit specialist — runs after ralph completes |
+| `user-journey` | Maps complete user flows end-to-end |
+
+---
+
+## Custom Agents
+
+Agents in `~/.claude/agents/` run as **independent subprocesses** and appear in both:
+- Copilot CLI: `/agent` browser and `task(agent_type="name")`
+- Claude Code: `/agent` command
+
+| Agent | Model | Description |
+|---|---|---|
+| `ralph` | sonnet | Autonomous dev — implements one user story from a PRD |
+| `documenter` | haiku | Post-implementation: commits, updates progress, writes docs |
+| `ui-ux-designer` | opus | Full UI/UX design workflow with design system integration |
+
+### Agent File Format
+
+Create `~/.claude/agents/<name>.md`:
+
+```markdown
+---
+name: my-agent
+description: "When to use this agent. Example triggers listed here."
+model: sonnet
+color: blue
+permissionMode: acceptEdits
+---
+
+# My Agent
+
+You are a specialized agent that...
+
+## Workflow
+1. Step one
+2. Step two
+
+## Signals
+- On completion: output MY_AGENT_DONE: summary
+- On blocker: output MY_AGENT_BLOCKED: reason
+```
+
+**Key fields:**
+- `model`: `sonnet` (balanced), `haiku` (fast/cheap), `opus` (complex reasoning)
+- `color`: `blue`, `cyan`, `green`, `yellow`, `red`, `purple`
+- `permissionMode`: `acceptEdits` (auto-approve file changes), `default` (ask)
+- `memory`: `user` (persists across sessions), omit for session-only
+
+---
+
+## Memory System
+
+This repo includes a persistent memory system across AI tools:
+
+### Files
+
+| File | Read by | Purpose |
+|---|---|---|
+| `AGENTS.md` | Claude + Gemini + Copilot | Universal project context |
+| `CLAUDE.md` | Claude Code + Copilot CLI | Claude-specific instructions |
+| `GEMINI.md` | Gemini CLI + Copilot CLI | Gemini-specific instructions |
+| `.github/copilot-instructions.md` | Copilot CLI (project) | Project Copilot context |
+| `~/.copilot/copilot-instructions.md` | Copilot CLI (global) | Global Copilot profile |
+
+### Memory Skills
+
+- **`always-on-memory`** — Session memory: writes decisions, progress, and context to `AGENTS.md`
+- **`multi-ai-memory`** — Syncs `AGENTS.md` to `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`
+
+### AGENTS.md Template
+
+```markdown
+# Project Context
+
+## Stack
+- Frontend: React Native / Expo Router
+- Backend: Node.js / Hono
+- DB: PostgreSQL / Drizzle ORM
+
+## Active Decisions
+- [DATE] Decision: reason
+
+## Current Sprint
+- [ ] Task 1
+- [x] Task 2
+
+## Patterns
+- Pattern: explanation
+```
+
+---
+
+## Using Skills as Agents
+
+Any skill can be invoked as a general-purpose agent:
+
+```
+Use the eng-frontend skill to implement the login screen.
+Signal ENG_FRONTEND_DONE when complete.
+```
+
+Or via the task tool in Copilot CLI:
+
+```
+task(
+  agent_type="general-purpose",
+  description="Implement login screen",
+  prompt="Using the eng-frontend skill, implement the login screen per docs/PRD.md.
+          Signal ENG_FRONTEND_DONE when done."
+)
+```
+
+For parallel execution, use background mode:
+
+```
+task(agent_type="ralph", mode="background", prompt="Implement US001 from docs/PRD.md")
+task(agent_type="ralph", mode="background", prompt="Implement US002 from docs/PRD.md")
+task(agent_type="ralph", mode="background", prompt="Implement US003 from docs/PRD.md")
+# All 3 run simultaneously -> documenter commits when they finish
+```
+
+---
+
+## The Full Pipeline
+
+```
+orchestrator
+  Phase 0: always-on-memory (INIT) -- load prior context
+  Phase 1: architect -- create PRD with parallel task groups
+  Phase 2: ralph x N -- implement in parallel (one per story)
+  Phase 3: documenter -- commit, update progress
+  Phase 4: tester -- validate everything works
+  Phase 5: always-on-memory (SAVE) -- persist session decisions
+```
+
+Trigger the full pipeline:
+
+```
+Start the orchestrator to implement [feature description]
+```
+
+Or with team skills for specific domains:
+
+```
+Use team-startup to build an MVP for [description]
+Use team-paid-media to audit and optimize our ad accounts
+Use team-enterprise-feature to build [feature] with full QA
+```
+
+---
+
+## Signal Convention
+
+Skills and agents communicate via output signals:
+
+| Signal | Meaning |
+|---|---|
+| `SKILL_DONE: summary` | Task completed successfully |
+| `SKILL_BLOCKED: reason` | Cannot proceed, needs intervention |
+| `RALPH_DONE: US001 - summary` | Ralph completed a user story |
+| `DOCUMENTER_DONE: commits` | Documenter finished committing |
+| `TESTER_DONE: results` | Testing complete |
+| `TESTER_BLOCKED: what failed` | Tests failed, needs fix |
+
+---
+
+## Contributing
+
+Skills follow this structure:
+
+```
+skill-name/
+  SKILL.md    <- frontmatter (name, description) + instructions
+```
+
+Agents follow this structure (in `agents/` directory):
+
+```
+agents/
+  agent-name.md   <- frontmatter (name, description, model, color) + system prompt
+```
+
+See `skill-creator/SKILL.md` for a guided skill creation workflow.
 
 ### Use with Your AI Model
 
