@@ -91,35 +91,46 @@ mkdir -p ~/.claude/skills
 cp -r /tmp/my-skills/*/ ~/.claude/skills/
 ```
 
-### Custom Agents (works with both Claude Code AND Copilot CLI)
+### Custom Agents
 
+Agents in this repo's `agents/` directory use the `.agent.md` format.
+
+**Copilot CLI** user agents go in `~/.config/copilot/agents/`:
+```bash
+mkdir -p ~/.config/copilot/agents
+cp /tmp/my-skills/agents/*.agent.md ~/.config/copilot/agents/
+```
+
+**Claude Code** user agents go in `~/.claude/agents/`:
 ```bash
 mkdir -p ~/.claude/agents
-cp /tmp/my-skills/agents/*.md ~/.claude/agents/
+cp /tmp/my-skills/agents/*.agent.md ~/.claude/agents/
 ```
 
 ### Install Everything at Once
 
 ```bash
 git clone https://github.com/elihuvillaraus/skills.git /tmp/my-skills
-mkdir -p ~/.copilot/skills ~/.claude/skills ~/.claude/agents
+mkdir -p ~/.copilot/skills ~/.claude/skills ~/.config/copilot/agents ~/.claude/agents
 cp -r /tmp/my-skills/*/ ~/.copilot/skills/
 cp -r /tmp/my-skills/*/ ~/.claude/skills/
-cp /tmp/my-skills/agents/*.md ~/.claude/agents/ 2>/dev/null || true
+cp /tmp/my-skills/agents/*.agent.md ~/.config/copilot/agents/
+cp /tmp/my-skills/agents/*.agent.md ~/.claude/agents/
 ```
 
 ---
 
 ## Installing on Another Computer
 
-One-liner that installs all skills for Copilot CLI + Claude Code:
+One-liner that installs all skills and agents:
 
 ```bash
 git clone https://github.com/elihuvillaraus/skills.git /tmp/skills \
-  && mkdir -p ~/.copilot/skills ~/.claude/skills ~/.claude/agents \
+  && mkdir -p ~/.copilot/skills ~/.claude/skills ~/.config/copilot/agents ~/.claude/agents \
   && cp -r /tmp/skills/*/ ~/.copilot/skills/ \
   && cp -r /tmp/skills/*/ ~/.claude/skills/ \
-  && cp /tmp/skills/agents/*.md ~/.claude/agents/ 2>/dev/null
+  && cp /tmp/skills/agents/*.agent.md ~/.config/copilot/agents/ \
+  && cp /tmp/skills/agents/*.agent.md ~/.claude/agents/
 echo "Done"
 ```
 
@@ -329,12 +340,38 @@ Agents in `~/.claude/agents/` run as **independent subprocesses** and appear in 
 | Agent | Model | Description |
 |---|---|---|
 | `ralph` | sonnet | Autonomous dev — implements one user story from a PRD |
+| `ralph-mobile` | sonnet | Mobile variant of ralph (Expo/React Native) |
 | `documenter` | haiku | Post-implementation: commits, updates progress, writes docs |
-| `ui-ux-designer` | opus | Full UI/UX design workflow with design system integration |
+| `tester` | gpt-5.3-codex | QA: writes and runs tests, produces TESTER_REPORT |
+| `tester-mobile` | sonnet | Mobile E2E testing with Maestro |
+| `architect` | sonnet | Creates PRDs with parallelizable task groups |
+| `eng-frontend` | sonnet | React/React Native frontend implementation |
+| `eng-backend` | sonnet | API/database/server implementation |
+| `eng-senior` | sonnet | Complex tasks requiring deep judgment |
+| `eng-ai` | sonnet | LLM integrations, RAG, AI-powered features |
+| `devops` | sonnet | CI/CD, Docker, GitHub Actions, infra |
+| `security-eng` | sonnet | Security audits and hardening |
+| `data-eng` | sonnet | Data pipelines and analytics infrastructure |
+| `mobile-builder` | sonnet | Expo/React Native specialist |
+| `rapid-proto` | sonnet | Fast prototyping for validation |
+| `software-architect` | sonnet | System design and architecture docs |
+| `growth-hacker` | sonnet | Growth experiments and acquisition loops |
+| `copywriter` | gpt-5.4 | Marketing copy and conversion writing |
+| `seo-specialist` | sonnet | SEO audits and optimization |
+| `sre` | sonnet | Reliability, monitoring, incident response |
+| `visionary` | sonnet | Strategic vision to bounded domains |
+| `researcher` | sonnet | Market research and competitive intel |
+| `marketer` | sonnet | Marketing strategy and campaigns |
+| `tech-lead` | sonnet | Technical leadership and code reviews |
+| `user-journey` | sonnet | User flow mapping |
+| `business-analyst` | sonnet | Requirements and process analysis |
+| `user-rep` | sonnet | User advocacy and feedback synthesis |
+| `compliance-advisor` | sonnet | Compliance and regulatory guidance |
+| `devils-advocate` | sonnet | Critical challenge of assumptions |
 
 ### Agent File Format
 
-Create `~/.claude/agents/<name>.md`:
+Create `~/.config/copilot/agents/<name>.agent.md` (Copilot CLI) or `~/.claude/agents/<name>.agent.md` (Claude Code):
 
 ```markdown
 ---
