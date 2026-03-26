@@ -63,26 +63,38 @@ Review the PRD summary. If it looks right, continue. If not, ask the architect t
 
 ---
 
-### Phase 3 — Implementation (parallel per Priority group)
+### Phase 3 — Implementation + Evaluation (Generator→Evaluator loop)
 
-For each Priority group in the PRD (execute sequentially between groups, parallel within):
+For each Priority group in the PRD (sequential between groups, parallel within):
 
 ```
-For Priority N (parallel):
-   Launch one @ralph subagent per user story in this group.
-   Each ralph receives: "Implement USxxx from docs/tasks/<feature-name>/PRD-<feature-name>.md"
+For Priority N (parallel ralph instances):
+   1. Launch one @ralph per user story in this group.
+      Each ralph: "Implement USxxx from docs/tasks/<feature-name>/PRD-<feature-name>.md"
    
-   In parallel, launch @tester (see Phase 5):
-   - Tester runs automated tests as ralph implements
-   - Tester prepares USER-QA.md with manual verification steps
-   - Tester identifies additional USER-TASKS discovered during testing
+   2. Ralph outputs a SPRINT CONTRACT before coding.
+      (If ralph skips this, ask ralph to produce it first.)
    
-   Wait for all RALPH_DONE or RALPH_BLOCKED signals.
+   3. Ralph implements → outputs RALPH_READY_FOR_EVAL.
    
-Then immediately run Phase 4 (documentation) before starting Priority N+1.
+   4. Launch @evaluator with the sprint contract + story context.
+      Evaluator uses playwright-cli to navigate the live app.
+      Evaluator returns EVALUATOR_APPROVED or EVALUATOR_REJECTED.
+   
+   5a. If EVALUATOR_APPROVED → proceed to Phase 4 (documenter commits).
+   5b. If EVALUATOR_REJECTED → pass rejection back to ralph.
+       Ralph fixes → outputs RALPH_READY_FOR_EVAL (iteration 2).
+       Re-run evaluator. Max 3 iterations total.
+   5c. If EVALUATOR_ESCALATE (3 rejections) → pause, show user the unresolved failures.
+   
+   In parallel with the ralph+evaluator loop, run @tester for:
+   - Automated unit/integration tests (non-blocking)
+   - Generating USER-QA.md manual verification steps
 ```
 
-**Note**: Implementation and testing happen in parallel. Neither blocks the other.
+**Key principle**: Documenter only commits AFTER evaluator approves. Never before.
+
+Then run Phase 4 before starting Priority N+1.
 
 ---
 
@@ -105,19 +117,19 @@ Then proceed to the next Priority group (back to Phase 3).
 
 ### Phase 5 — Testing (parallel with implementation)
 
-**This phase runs in parallel with Phase 3-4 — it does NOT block implementation.**
+**This phase runs in parallel with Phase 3-4 — it does NOT block the evaluator loop.**
 
 Launch `@tester` with:
 - The PRD path
 - The list of all modified files (from all RALPH_DONE signals)
 
 Tester will:
-1. Run automated tests (unit, integration, E2E)
-2. Generate detailed `docs/USER-QA.md` with manual verification steps organized by USER-JOURNEY
+1. Run automated tests (unit, integration, E2E with playwright-cli)
+2. Generate detailed `docs/USER-QA.md` with manual verification steps
 3. Identify additional `docs/USER-TASKS.md` items discovered during testing
-4. Return `TESTER_REPORT` (but this does not block the orchestrator from proceeding)
+4. Return `TESTER_REPORT`
 
-**Implementation continues regardless of test results.** If issues are found, they are documented in USER-QA.md for the user to review.
+> **Note**: The evaluator validates individual sprints; tester validates the whole feature end-to-end. Both are needed. Evaluator runs first; tester runs after all stories complete.
 
 ---
 
@@ -301,11 +313,13 @@ Beyond the core pipeline skills (architect, ralph, documenter, tester), you now 
 ### 🧪 Quality & Testing
 | Skill | Use when |
 |-------|----------|
+| `evaluator` | Sprint-level adversarial QA in the Generator→Evaluator loop |
 | `reality-checker` | Production-readiness gate (strict) |
 | `evidence-collector` | QA with visual evidence, screenshots |
 | `a11y-auditor` | Accessibility, WCAG compliance |
 | `perf-benchmarker` | Performance testing, load, Core Web Vitals |
 | `api-tester` | API validation, contract testing |
+| `autoresearch` | Overnight skill optimization via binary evals |
 
 ### 🔧 Support & Ops
 | Skill | Use when |
