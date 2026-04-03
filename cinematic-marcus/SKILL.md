@@ -105,8 +105,9 @@ Present a table with ONE hero object per concept, distinct visual styles, clear 
 
 | Asset | Model | Cost |
 |-------|-------|------|
-| Hero image | nano-banana-pro | Free |
-| Hero image (4K) | nano-banana-pro-4k | ~6 credits |
+| Hero image 1K | nano-banana-2 | ~3 credits (~$0.015) |
+| Hero image 2K | nano-banana-2-2k | ~4 credits (~$0.020) |
+| Hero image 4K | nano-banana-2-4k | ~6 credits (~$0.030) |
 | Hero video (5s) | veo3_fast | ~60 credits |
 | Hero video (10s) | veo3 | ~100 credits |
 | Frame extraction | ffmpeg (local) | Free |
@@ -115,28 +116,60 @@ Ask: "Ready to proceed? This will cost approximately X credits." Wait for confir
 
 ### 2c. Generate Image
 
+**Nano Banana 2 prompting formula (from Google's official guide):**
+- `[Subject] + [Action] + [Location/context] + [Composition] + [Style]`
+- Enclose all text in quotes: `"BRAND NAME"` for accurate text rendering
+- Positive framing: describe what you WANT, not what you don't want
+- Be specific: lighting ("golden hour backlighting"), lens ("f/1.8 shallow DOF"), film ("Fujifilm color science")
+- For img2img: include scaffold/reference URL in `image_input` array (up to 14 references)
+
 ```bash
 source /Users/elihuvillaraus/Docs/SaaS/ai-content-machine/marcus/frontend/.env.local
 
+# Text-to-image (no reference)
 curl -s -X POST "${KIE_API_BASE_URL}/api/v1/jobs/createTask" \
   -H "Authorization: Bearer ${KIE_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "nano-banana-pro",
+    "model": "nano-banana-2",
     "input": {
       "prompt": "DETAILED_PROMPT_HERE",
       "aspect_ratio": "16:9",
+      "resolution": "1K",
       "output_format": "png"
+    }
+  }'
+
+# Image-to-image (with reference, e.g. scaffold enhancement)
+curl -s -X POST "${KIE_API_BASE_URL}/api/v1/jobs/createTask" \
+  -H "Authorization: Bearer ${KIE_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nano-banana-2",
+    "input": {
+      "prompt": "DETAILED_PROMPT_HERE",
+      "aspect_ratio": "16:9",
+      "resolution": "1K",
+      "output_format": "png",
+      "image_input": ["REFERENCE_IMAGE_URL"]
     }
   }'
 ```
 
-**Poll status (Nano Banana):**
+**Poll status (Nano Banana 2 — uses jobs API):**
 ```bash
-curl -s "${KIE_API_BASE_URL}/api/v1/playground/recordInfo?taskId=TASK_ID" \
+curl -s "${KIE_API_BASE_URL}/api/v1/jobs/recordInfo?taskId=TASK_ID" \
   -H "Authorization: Bearer ${KIE_API_KEY}"
-# state: "waiting" -> "success"
-# resultJson.resultUrls[0] = image URL
+# data.state: "waiting" → "generating" → "success" | "fail"
+# data.resultJson (parse as JSON) → .resultUrls[0] = image URL
+```
+
+**Extract result URL:**
+```bash
+RESULT=$(curl -s "${KIE_API_BASE_URL}/api/v1/jobs/recordInfo?taskId=TASK_ID" \
+  -H "Authorization: Bearer ${KIE_API_KEY}")
+STATE=$(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data']['state'])")
+IMAGE_URL=$(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); rj=json.loads(d['data']['resultJson']); print(rj['resultUrls'][0])")
 ```
 
 ### 2d. Generate Video (Image-to-Video)
@@ -338,7 +371,7 @@ pnpm build && npx vercel --yes --prod
 2. **LaserFlow needs alpha: true.** Three.js WebGLRenderer defaults to opaque black. Set `alpha: true`, `setClearColor(0,0,0,0)`, `transparent: true` on material.
 3. **next/dynamic for Three.js.** Use `dynamic(() => import(...), { ssr: false })` + `key={pathname}` to force remount on client-side navigation.
 4. **Lightning shader alpha.** Output `gl_FragColor = vec4(color, clamp(length(color)*1.5, 0.0, 1.0))` for transparency. Enable GL blend.
-5. **Marcus status endpoints differ by model.** Nano Banana: `/api/v1/playground/recordInfo`. Veo: `/api/v1/veo/record-info`. Kling/others: `/api/v1/jobs/recordInfo`.
+5. **Marcus status endpoints differ by model.** Nano Banana 2: `/api/v1/jobs/recordInfo`. Veo: `/api/v1/veo/record-info`. Kling/others: `/api/v1/jobs/recordInfo`. Result URL is in `data.resultJson` (JSON string) → parse → `.resultUrls[0]`.
 6. **Never use screen blend on dark backgrounds.** Screen blend makes dark pixels transparent -- on a near-black page, the effect disappears. Use normal blend with alpha transparency instead.
 7. **Image opacity + gradient overlay.** Hero image at 0.5-0.7 opacity + radial gradient overlay gives text readability without vignettes.
 8. **Match reference images exactly.** Generic particles/gradients are not "premium." Generate actual assets with Marcus that match the brand direction.

@@ -1,6 +1,6 @@
 ---
 name: aso-marcus
-description: Generate high-converting App Store screenshots by analyzing your app's codebase, discovering core benefits, and creating ASO-optimized screenshot images using Marcus (KIE API / Nano Banana Pro). Triggers on "app store screenshots", "aso screenshots", "generate screenshots", "app store marketing", "aso-marcus".
+description: Generate high-converting App Store screenshots by analyzing your app's codebase, discovering core benefits, and creating ASO-optimized screenshot images using Marcus (KIE API / Nano Banana 2). Triggers on "app store screenshots", "aso screenshots", "generate screenshots", "app store marketing", "aso-marcus".
 ---
 
 You are an expert App Store Optimization (ASO) consultant and screenshot designer powered by Marcus (KIE API). Your job is to create high-converting App Store screenshots — the kind that stop the scroll and drive downloads.
@@ -13,7 +13,15 @@ This is a multi-phase process. Follow each phase in order — but ALWAYS check m
 
 ### 1. Marcus/KIE API for ALL image generation
 Never use Gemini MCP, Google AI Studio, WaveSpeed, or any other image generation service.
-All generation goes through the KIE API at Marcus.
+All generation goes through the KIE API at Marcus with **`nano-banana-2`** (same Pro quality, faster, cheaper).
+
+**Nano Banana 2 = Gemini 3.1 Flash Image** — Pro-level quality at Flash speed.
+- Model slug: `"nano-banana-2"`
+- Up to **14 reference images** in `image_input` array (img2img)
+- Accurate text rendering: always **wrap text in quotes** in prompts (e.g. `"TRACK"`)
+- Prompt formula: `[Subject] + [Action] + [Location/context] + [Composition] + [Style]`
+- `google_search: true` for real-time accurate visuals (optional)
+- Resolution: `"1K"` default, `"2K"`, `"4K"` available
 
 **Credentials location:**
 ```
@@ -288,34 +296,46 @@ echo "Scaffold URL: $SCAFFOLD_URL"
 
 #### Step 3: Enhance with Marcus (3 versions in parallel)
 
-Source credentials and generate 3 versions. For each, call Marcus KIE API with the scaffold URL as image reference.
+Source credentials and generate 3 versions. Nano Banana 2 uses `image_input` array for reference images.
 
 **Fire all 3 tasks in a single bash block:**
 
 ```bash
 source /Users/elihuvillaraus/Docs/SaaS/ai-content-machine/marcus/frontend/.env.local
 
-# For FIRST screenshot (no style template yet):
-PROMPT1="[FIRST SCREENSHOT ENHANCEMENT PROMPT — see template below]"
-PROMPT2="$PROMPT1"  # Same prompt, 3 variations
-PROMPT3="$PROMPT1"
+# Nano Banana 2 prompting guidelines (from Google's official guide):
+# - Wrap ALL text you want rendered in quotes: "TRACK" not TRACK
+# - Positive framing: describe what you WANT, never what you DON'T want
+# - Formula: [Subject] + [Action] + [Location/context] + [Composition] + [Style]
+# - For img2img: scaffold URL goes in image_input array (accepts up to 14 refs)
+
+PROMPT='[FULL ENHANCEMENT PROMPT — see template below]'
 
 TASK1=$(curl -s -X POST "${KIE_API_BASE_URL}/api/v1/jobs/createTask" \
   -H "Authorization: Bearer ${KIE_API_KEY}" \
   -H "Content-Type: application/json" \
-  -d "{\"model\": \"nano-banana-pro\", \"input\": {\"prompt\": \"$PROMPT1\", \"aspect_ratio\": \"9:16\", \"output_format\": \"jpg\", \"image_url\": \"$SCAFFOLD_URL\", \"image_weight\": 0.75}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('taskId','ERROR'))")
+  -d "{\"model\": \"nano-banana-2\", \"input\": {\"prompt\": \"$PROMPT\", \"aspect_ratio\": \"9:16\", \"resolution\": \"1K\", \"output_format\": \"png\", \"image_input\": [\"$SCAFFOLD_URL\"]}}" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('taskId','ERROR'))")
 
 TASK2=$(curl -s -X POST "${KIE_API_BASE_URL}/api/v1/jobs/createTask" \
   -H "Authorization: Bearer ${KIE_API_KEY}" \
   -H "Content-Type: application/json" \
-  -d "{\"model\": \"nano-banana-pro\", \"input\": {\"prompt\": \"$PROMPT2\", \"aspect_ratio\": \"9:16\", \"output_format\": \"jpg\", \"image_url\": \"$SCAFFOLD_URL\", \"image_weight\": 0.75}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('taskId','ERROR'))")
+  -d "{\"model\": \"nano-banana-2\", \"input\": {\"prompt\": \"$PROMPT\", \"aspect_ratio\": \"9:16\", \"resolution\": \"1K\", \"output_format\": \"png\", \"image_input\": [\"$SCAFFOLD_URL\"]}}" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('taskId','ERROR'))")
 
 TASK3=$(curl -s -X POST "${KIE_API_BASE_URL}/api/v1/jobs/createTask" \
   -H "Authorization: Bearer ${KIE_API_KEY}" \
   -H "Content-Type: application/json" \
-  -d "{\"model\": \"nano-banana-pro\", \"input\": {\"prompt\": \"$PROMPT3\", \"aspect_ratio\": \"9:16\", \"output_format\": \"jpg\", \"image_url\": \"$SCAFFOLD_URL\", \"image_weight\": 0.75}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('taskId','ERROR'))")
+  -d "{\"model\": \"nano-banana-2\", \"input\": {\"prompt\": \"$PROMPT\", \"aspect_ratio\": \"9:16\", \"resolution\": \"1K\", \"output_format\": \"png\", \"image_input\": [\"$SCAFFOLD_URL\"]}}" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('taskId','ERROR'))")
 
 echo "Task IDs: $TASK1 $TASK2 $TASK3"
+```
+
+**For subsequent screenshots (scaffold + style template = 2 references):**
+```bash
+# image_input accepts up to 14 URLs — pass scaffold first, style template second
+-d "{\"model\": \"nano-banana-2\", \"input\": {\"prompt\": \"$PROMPT\", \"aspect_ratio\": \"9:16\", \"resolution\": \"1K\", \"output_format\": \"png\", \"image_input\": [\"$SCAFFOLD_URL\", \"$STYLE_TEMPLATE_URL\"]}}"
 ```
 
 #### Step 4: Poll all 3 tasks until complete
@@ -326,11 +346,12 @@ source /Users/elihuvillaraus/Docs/SaaS/ai-content-machine/marcus/frontend/.env.l
 poll_task() {
   local TASK_ID="$1"
   for i in $(seq 1 30); do
-    RESULT=$(curl -s "${KIE_API_BASE_URL}/api/v1/playground/recordInfo?taskId=${TASK_ID}" \
+    RESULT=$(curl -s "${KIE_API_BASE_URL}/api/v1/jobs/recordInfo?taskId=${TASK_ID}" \
       -H "Authorization: Bearer ${KIE_API_KEY}")
     STATE=$(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('state','unknown'))")
     if [ "$STATE" = "success" ]; then
-      echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('resultJson',{}).get('resultUrls',[None])[0] or d.get('data',{}).get('resultUrls',[None])[0])"
+      # resultJson is a JSON string — parse it to get resultUrls
+      echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); rj=json.loads(d['data']['resultJson']); print(rj['resultUrls'][0])"
       return 0
     fi
     echo "  Task $TASK_ID: $STATE (attempt $i/30)" >&2
@@ -478,10 +499,11 @@ screenshots/
 
 | Model | Per image | 3 variants |
 |-------|-----------|------------|
-| nano-banana-pro | ~$0.03 | ~$0.09 |
-| nano-banana-pro-4k | ~$0.06 | ~$0.18 |
+| nano-banana-2 (1K) | ~$0.015 | ~$0.045 |
+| nano-banana-2-2k | ~$0.020 | ~$0.060 |
+| nano-banana-2-4k | ~$0.030 | ~$0.090 |
 
-For 5 benefits × 3 variants = ~$0.45 per full screenshot set (nano-banana-pro).
+For 5 benefits × 3 variants = ~$0.225 per full screenshot set (nano-banana-2 1K).
 
 ---
 
