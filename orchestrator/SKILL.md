@@ -17,13 +17,29 @@ This flow requires autopilot mode with all permissions granted:
 
 ## The Pipeline
 
-### Phase 0 — Always On Memory (init)
+### Phase 0 — Memory + Context Init (parallel)
 
-Before starting the pipeline, load the `always-on-memory` skill:
+Run both in parallel — neither blocks Phase 1:
+
+**0a. Load Engram context** (persistent cross-session memory):
+```bash
+engram context
+```
+This returns architecture decisions, past learnings, and last session summary for this project.
+If engram is not installed: `brew install gentleman-programming/tap/engram`
+
+**0b. Always On Memory** (session-scoped markdown):
+Load the `always-on-memory` skill:
 - Initialize `docs/ALWAYS-ON-MEMORY.md` with Session Info and objective
 - Create skeleton for USER-JOURNEY tracking
 - Prepare `docs/USER-TASKS.md` for auto-detection of user actions
-- This runs in parallel and doesn't block any subsequent phases
+
+At the end of the pipeline (Phase 5), save a session summary to Engram:
+```bash
+engram save "Session $(date +%Y-%m-%d): <feature name>" \
+  "<what was built, decisions made, blockers resolved, next steps>" \
+  --type session
+```
 
 ---
 

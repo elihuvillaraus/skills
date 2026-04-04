@@ -31,8 +31,15 @@ The user specifies which skill to improve:
 
 Read the target skill:
 ```bash
-cat ~/.copilot/skills/<skill-name>/SKILL.md
+cat ~/.agents/skills/<skill-name>/SKILL.md
 ```
+
+**Load past experiment history from Engram** (avoid repeating failed hypotheses):
+```bash
+engram search "autoresearch <skill-name>" --type learning --project skills --limit 20
+```
+Review the results. Note which hypotheses already failed — do NOT test them again.
+Use successful experiments as a baseline to build on.
 
 ### 0.2 — Define eval harness
 
@@ -128,7 +135,7 @@ Delta: +X cases
 
 **If improved** (pass rate went UP):
 ```bash
-cd ~/.copilot/skills/<skill>
+cd ~/.agents/skills/<skill>
 git add SKILL.md
 git commit -m "autoresearch: improve <skill> (+X pass rate)
 
@@ -137,12 +144,21 @@ Pass rate: X% → Y%
 Test cases improved: TC003
 
 Co-authored-by: AutoResearch <autoresearch@local>"
+
+# Save to Engram for future runs to start from known state
+engram save "autoresearch-<skill>-exp-<N>: +X% pass rate" \
+  "Hypothesis: <what was tested>. Result: <X%→Y%>. Change: <one sentence>. Kept: yes." \
+  --type learning --project skills
 ```
 
 **If same or worse**:
 ```bash
-cp /tmp/skill-backup.md ~/.copilot/skills/<skill>/SKILL.md
-echo "Variant 1 discarded. Pass rate unchanged."
+cp /tmp/skill-backup.md ~/.agents/skills/<skill>/SKILL.md
+
+# Still save discarded variant so future runs don't repeat the same hypothesis
+engram save "autoresearch-<skill>-exp-<N>: no improvement" \
+  "Hypothesis: <what was tested>. Result: no change. Discarded. Do not retry this hypothesis." \
+  --type learning --project skills
 ```
 
 ---

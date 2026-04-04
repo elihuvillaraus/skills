@@ -153,6 +153,13 @@ EVALUATOR_APPROVED: {
 }
 ```
 
+After outputting `EVALUATOR_APPROVED`, save to Engram:
+```bash
+engram save "APPROVED: USxxx <story title>" \
+  "Criteria passed: all 4. Key: <one sentence on what made it pass. e.g. 'edge case for empty form handled with toast'>" \
+  --type decision
+```
+
 ### If REJECTED:
 
 ```
@@ -170,6 +177,13 @@ EVALUATOR_REJECTED: {
   "fix_required": "Specific instructions for ralph on what to fix.",
   "iteration": 1
 }
+```
+
+After outputting `EVALUATOR_REJECTED`, save to Engram:
+```bash
+engram save "REJECTED: USxxx <story title> — <primary failure>" \
+  "Failed criterion: <criterion>. Root cause: <specific issue>. Fix required: <instructions given to ralph>" \
+  --type decision
 ```
 
 Ralph must fix and resubmit. Maximum **3 iterations** before escalating to human.
