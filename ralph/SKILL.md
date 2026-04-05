@@ -51,10 +51,42 @@ SPRINT CONTRACT for USxxx:
 
 This contract tells the evaluator exactly how to verify your work. Be specific — vague criteria will be rejected.
 
-### Step 3 — Implement
+### Step 3 — TDD: Write Tests First
+
+**If a spec file exists** (`docs/tasks/<feature>/specs/USxxx-<slug>-spec.md`), read it now.
+The spec's "Test Cases" section defines exactly what tests to write.
+
+**Write all tests BEFORE writing implementation code.** They will fail — that is correct.
+
+```bash
+# Create/update test file for this story
+# Test file location: match project conventions (e.g., src/features/X/__tests__/X.test.ts)
+```
+
+**TDD cycle for each function in the spec:**
+
+1. **Red** — Write the test. Run it. Confirm it FAILS (if it passes without code, the test is wrong).
+   ```bash
+   npm test -- --testPathPattern="<your-test-file>" 2>&1 | tail -20
+   ```
+
+2. **Green** — Write the MINIMUM code to make the test pass. Nothing more.
+
+3. **Triangulate** — Add edge case tests from the spec's error types. Each new test → minimum code to pass.
+
+**Required test categories (from spec section 5):**
+- Happy path (main success scenario)
+- Validation errors (empty inputs, wrong formats)
+- Authorization errors (wrong user, unauthenticated)
+- Business logic errors (duplicate, not found, conflict)
+- At least one edge case that wasn't in the spec but follows from the domain logic
+
+If NO spec file exists, derive tests from the PRD's acceptance criteria. Same TDD order applies.
+
+### Step 4 — Implement (against passing tests)
 
 Write production-quality code following the Technical Specs exactly:
-- Match the types, function signatures, and import paths specified; use the project's existing path aliases (e.g., `@/lib/...`) consistently
+- Match the types, function signatures, and import paths from the spec; use the project's existing path aliases (e.g., `@/lib/...`) consistently
 - Follow existing patterns in the codebase (naming, error handling, exports)
 - No `any` types in production code or test files; no placeholder code; no TODOs
 - No `console.log`, `console.debug`, or temporary debug statements — remove all before signaling
@@ -63,7 +95,7 @@ Write production-quality code following the Technical Specs exactly:
 - Code comments: only add comments when the logic genuinely needs clarification; do not narrate obvious code
 - **If the story touches a database schema**: verify the change is backward-compatible (additive only — new nullable columns or new tables). If it's a breaking change, add a rollback migration alongside the forward migration and document both in the PR summary.
 
-### Step 4 — Quality Gates
+### Step 5 — Quality Gates
 
 Before running gates: ensure dependencies are installed (`npm install` / `pnpm install` / `yarn` — match the lockfile present; if install fails, try deleting `node_modules` and the lockfile and reinstalling). Run the Quality Gates defined in the PRD header. For TypeScript projects, always run `tsc --noEmit` to catch compilation errors even if the PRD's Quality Gates don't list it. If the project has a linter configured (eslint, biome, or similar — check `package.json` scripts for a `lint` script), run it and fix all lint errors before signaling done. If existing tests fail after your implementation (tests that were passing before coding), treat them as regressions and fix them — do not signal done with failing tests introduced by your changes. Fix all errors before signaling done.
 

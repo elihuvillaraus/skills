@@ -79,29 +79,66 @@ Review the PRD summary. If it looks right, continue. If not, ask the architect t
 
 ---
 
-### Phase 3 — Implementation + Evaluation (Generator→Evaluator loop)
+### Phase 2.5 — Spec Writing (parallel, SDD)
+
+**Run in parallel with Phase 2** (spec writing can start once the PRD story list is known):
+
+For each user story in Priority 1 (or all stories if the feature is small):
+Launch one `@spec-writer` per story simultaneously:
+> "Write specs for USxxx from docs/tasks/<feature-name>/PRD-<feature-name>.md"
+
+The spec-writer will:
+1. Read the user story and acceptance criteria
+2. Search Engram for relevant architectural decisions
+3. Produce `docs/tasks/<feature-name>/specs/USxxx-<slug>-spec.md` with:
+   - Data model (types, DB schema)
+   - API contract (endpoints, request/response types)
+   - Service function signatures
+   - UI component interfaces
+   - **Test cases** (these become ralph's TDD starting point)
+4. Signal `SPEC_DONE`
+
+Wait for all `SPEC_DONE` signals before launching ralph instances.
+If spec is ambiguous: spec-writer signals `SPEC_BLOCKED` → ask architect to clarify → retry spec-writer.
+
+> **Why SDD?** The spec is the contract between architect and implementer.
+> Ralph writes tests against the spec FIRST (TDD), then minimal code to pass them.
+> This eliminates most evaluator rejections due to wrong interfaces or missing error handling.
+
+---
+
+### Phase 3 — Implementation + Evaluation (TDD + Generator→Evaluator loop)
 
 For each Priority group in the PRD (sequential between groups, parallel within):
 
 ```
 For Priority N (parallel ralph instances):
    1. Launch one @ralph per user story in this group.
-      Each ralph: "Implement USxxx from docs/tasks/<feature-name>/PRD-<feature-name>.md"
+      Each ralph: "Implement USxxx from docs/tasks/<feature-name>/PRD-<feature-name>.md
+                   using spec at docs/tasks/<feature-name>/specs/USxxx-<slug>-spec.md"
    
    2. Ralph outputs a SPRINT CONTRACT before coding.
       (If ralph skips this, ask ralph to produce it first.)
    
-   3. Ralph implements → outputs RALPH_READY_FOR_EVAL.
+   3. Ralph does TDD:
+      a. Writes ALL test cases from the spec first (they fail — correct)
+      b. Writes minimal code to make each test pass
+      c. Triangulates edge cases
    
-   4. Launch @evaluator with the sprint contract + story context.
+   4. Ralph implements → all spec tests pass → outputs RALPH_READY_FOR_EVAL.
+   
+   5. Launch @evaluator with the sprint contract + spec path + story context.
       Evaluator uses playwright-cli to navigate the live app.
       Evaluator returns EVALUATOR_APPROVED or EVALUATOR_REJECTED.
    
-   5a. If EVALUATOR_APPROVED → proceed to Phase 4 (documenter commits).
-   5b. If EVALUATOR_REJECTED → pass rejection back to ralph.
+   6a. If EVALUATOR_APPROVED → run @guardian-angel before Phase 4:
+       "Run /guardian-angel on USxxx changes"
+       If GGA_APPROVED → proceed to Phase 4 (documenter commits).
+       If GGA_REJECTED → pass violations back to ralph for fix.
+   6b. If EVALUATOR_REJECTED → pass rejection back to ralph.
        Ralph fixes → outputs RALPH_READY_FOR_EVAL (iteration 2).
        Re-run evaluator. Max 3 iterations total.
-   5c. If EVALUATOR_ESCALATE (3 rejections) → pause, show user the unresolved failures.
+   6c. If EVALUATOR_ESCALATE (3 rejections) → pause, show user the unresolved failures.
    
    In parallel with the ralph+evaluator loop, run @tester for:
    - Automated unit/integration tests (non-blocking)
