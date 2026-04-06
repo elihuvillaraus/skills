@@ -12,3 +12,4 @@ Weekly skill improvement runs.
 | 2026-03-26 | `ralph` | 100% | 100% | 15 |
 | 2026-03-26 | `ralph` | 100% | 100% | 15 |
 | 2026-03-29 | `ralph` | see log | 88% | 15 |
+| 2026-04-05 | `architect` | 67% | see log | 5 |
