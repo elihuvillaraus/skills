@@ -179,3 +179,12 @@ Checklist before outputting `RALPH_DONE`:
 - [ ] Linter passes (if configured)
 - [ ] Dev server running and responding on correct port
 - [ ] No pre-existing regressions introduced
+
+## Output Enforcement (output-skill rules)
+
+These apply to every response, every file, every iteration:
+
+- **No truncation:** Never use `// ...`, `// rest of code`, `// implement here`, `// similar to above`, bare `...` standing in for omitted code
+- **No prose shortcuts:** Never say "the rest follows the same pattern", "for brevity", "I'll leave that as an exercise"
+- **No skeletons:** Outputting a skeleton when the request was for a full implementation is a hard failure
+- **Long outputs:** Write at full quality up to a clean breakpoint (end of function/file), then pause with `[PAUSED — X of Y complete. Send "continue" to resume from: next section name]`. On "continue", pick up exactly where stopped — no recap.
