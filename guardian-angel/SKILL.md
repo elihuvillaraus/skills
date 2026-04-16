@@ -26,6 +26,8 @@ Unlike a linter (which checks syntax/style), you check:
 | **Skill compliance** | Does the implementation match the spec (`USxxx-spec.md`)? Did ralph implement what was contracted? |
 | **Security hygiene** | Is an env variable hardcoded? Is user input unsanitized? |
 | **Test coverage** | Does every new function have at least one test? Is the error path tested? |
+| **Simplicity (Karpathy)** | Is there a 50-line solution where 200 lines were written? Are there abstractions with only one concrete use? |
+| **Surgical changes (Karpathy)** | Were lines changed that don't trace to the task? Drive-by formatting or refactoring? |
 
 ---
 
@@ -106,6 +108,20 @@ For every new function/method added:
 - Is there at least one test for the error/edge path?
 
 Flag: `MISSING_TEST` with function name.
+
+### Step 6 — Karpathy: Simplicity + Surgical Changes
+
+**Simplicity check:**
+- Are there abstractions that are only used once? (Flag: `OVERENGINEERED`)
+- Are there config objects with many unused fields? (Flag: `OVERENGINEERED`)
+- Could 200 lines be 50 without losing correctness? (Flag: `OVERENGINEERED`)
+- Are there "for future flexibility" patterns that add complexity now? (Flag: `OVERENGINEERED`)
+
+**Surgical changes check:**
+- Does every changed line in `git diff` trace directly to the stated task?
+- Are there formatting, comment, or style changes unrelated to the task? (Flag: `DRIVE_BY_CHANGE`)
+- Was pre-existing dead code deleted without being asked to? (Flag: `DRIVE_BY_CHANGE`)
+- Was adjacent working code "improved" without being asked? (Flag: `DRIVE_BY_CHANGE`)
 
 ---
 

@@ -31,14 +31,27 @@ Invoke ralph by giving it a specific user story and PRD path:
    Apply any learnings found (past rejections, known pitfalls, established patterns). Then load any files referenced in Technical Specs. Understand existing patterns before writing a single line.
 4. **Run existing tests before coding** — Run the project's test suite to establish a pre-coding baseline. Note any tests that already fail. This lets you distinguish pre-existing failures from regressions you introduce.
 
-### Step 2 — Sprint Contract (REQUIRED before coding)
+### Step 2 — Think Before Coding (Karpathy Gate)
 
-Before writing a single line of code, output a Sprint Contract:
+Before the Sprint Contract, apply the Karpathy pre-coding gate:
+
+1. **Surface assumptions** — List every assumption you're making about the story. If any assumption is uncertain, ask rather than guess.
+2. **Present interpretations** — If the story has multiple valid implementations, present them briefly. Don't pick silently.
+3. **Simplicity check** — Is there a simpler approach than what you're about to do? If yes, propose it.
+4. **Scope check** — Is what you're about to build the minimum required to satisfy the acceptance criteria? Nothing more.
+
+If blocked by ambiguity, output `RALPH_BLOCKED: [specific unclear question]` immediately — do not implement around confusion.
+
+### Step 2b — Sprint Contract (REQUIRED before coding)
+
+After the Karpathy Gate, output a Sprint Contract:
 
 ```
 SPRINT CONTRACT for USxxx:
 - Story: <title from PRD>
+- Assumptions: <explicit list of what you're assuming — none = state "none">
 - Technical approach: <specific implementation plan — functions, files, patterns>
+- Simplicity rationale: <why this approach is minimum viable, not over-engineered>
 - Testable acceptance criteria (minimum 4 items; at least one MUST cover an error/edge case):
   - [ ] Navigate to <URL> → expect <visible element or text>
   - [ ] Click <button/action> → expect <result>

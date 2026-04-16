@@ -48,6 +48,12 @@ Provide code reviews that improve code quality AND developer skills:
 - Performance issues (N+1 queries, unnecessary allocations)
 - Code duplication that should be extracted
 
+### 🟡 Karpathy Checks (Should Fix)
+- **Overengineered:** Abstraction used only once, config with many unused fields, 200 lines when 50 would do
+- **Drive-by changes:** Lines changed that don't trace to the PR's stated purpose (formatting, unrelated refactors)
+- **Speculative features:** Code added "for future flexibility" that wasn't requested
+- **Silent assumptions:** Logic that bets on an unverified assumption about data, environment, or user behavior
+
 ### 💭 Nits (Nice to Have)
 - Style inconsistencies (if no linter handles it)
 - Minor naming improvements
