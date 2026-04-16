@@ -15,6 +15,23 @@ This flow requires autopilot mode with all permissions granted:
 
 ---
 
+## ⚠️ Pipeline Laws — Always Active, Never Optional
+
+Every agent in every phase operates under these laws. **No exceptions. No skipping.**
+
+| # | Law | Who checks | Violation response |
+|---|-----|------------|-------------------|
+| 1 | **Engram Always** — load at Phase 0, save at Phase 5 | Orchestrator | Skip = pipeline incomplete, run Phase 0 before retrying |
+| 2 | **SDD Before Code** — `SPEC_DONE` for every story before any ralph starts | Orchestrator | No spec = block ralph launch, return to Phase 2.5 |
+| 3 | **TDD Mandatory** — ralph writes ALL tests from spec before any impl code | Evaluator + Orchestrator | `RALPH_READY_FOR_EVAL` with no test files = auto-rejected, back to ralph |
+| 4 | **Karpathy Gate** — ralph states assumptions + simplest approach before Sprint Contract | Ralph (enforced in sprint contract) | Sprint contract without Assumptions section = rejected |
+| 5 | **E2E Non-Negotiable** — tester runs `playwright-cli` through all major flows | Orchestrator | `TESTER_REPORT` without E2E screenshots = rejected, tester re-runs |
+
+> These are **embedded here** so they don't have to be "found" in sub-skill files.
+> Any subagent that ignores them is violating the pipeline contract.
+
+---
+
 ## The Pipeline
 
 ### Phase 0 — Memory + Context Init (parallel)
@@ -118,14 +135,22 @@ For Priority N (parallel ralph instances):
                    using spec at docs/tasks/<feature-name>/specs/USxxx-<slug>-spec.md"
    
    2. Ralph outputs a SPRINT CONTRACT before coding.
-      (If ralph skips this, ask ralph to produce it first.)
+      Sprint contract MUST include an "Assumptions" section (Karpathy Gate — Pipeline Law #4).
+      If ralph skips the sprint contract or omits the Assumptions section → reject, demand it.
    
-   3. Ralph does TDD:
-      a. Writes ALL test cases from the spec first (they fail — correct)
-      b. Writes minimal code to make each test pass
-      c. Triangulates edge cases
+   3. Ralph does TDD (Pipeline Law #3 — MANDATORY):
+      a. Reads spec file: docs/tasks/<feature-name>/specs/USxxx-<slug>-spec.md
+      b. Writes ALL test files from the spec FIRST (they fail — correct, that is the point)
+      c. Only then writes implementation code to make them pass
+      d. Triangulates edge cases defined in the spec
    
    4. Ralph implements → all spec tests pass → outputs RALPH_READY_FOR_EVAL.
+   
+   [PIPELINE LAW #3 CHECK — before launching evaluator]:
+   Run: git diff --name-only HEAD | grep -E "(\.test\.|\.spec\.)"
+   If output is empty → REJECT IMMEDIATELY: "RALPH_REJECTED: No test files found.
+   TDD is Pipeline Law #3. Read the spec, write failing tests first, then implement."
+   Do NOT launch evaluator until at least one test file exists in the diff.
    
    5. Launch @evaluator with the sprint contract + spec path + story context.
       Evaluator uses playwright-cli to navigate the live app.
@@ -183,6 +208,14 @@ Tester will:
 4. Return `TESTER_REPORT`
 
 > **Note**: The evaluator validates individual sprints; tester validates the whole feature end-to-end. Both are needed. Evaluator runs first; tester runs after all stories complete.
+
+**[PIPELINE LAW #5 CHECK — E2E is Non-Negotiable]:**
+When you receive `TESTER_REPORT`, verify it contains:
+- `smoke.passed` or `smoke.failed` fields (not N/A)
+- At least one screenshot path in `evidence/screenshots/`
+
+If `TESTER_REPORT` lacks E2E results or screenshots → **REJECT**: "TESTER_REPORT rejected: Pipeline Law #5 requires playwright-cli E2E execution. Re-run tester and complete Phase 1 Smoke Tests."
+A passing unit test suite is NOT sufficient — E2E is required.
 
 ---
 

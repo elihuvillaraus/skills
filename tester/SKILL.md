@@ -89,6 +89,21 @@ else console.log('All env vars present');
 "
 ```
 
+### 0e. TDD + Spec Verification
+```bash
+# Check spec files exist (SDD — spec-writer should have created these)
+ls docs/tasks/*/specs/*.md 2>/dev/null && echo "Specs found" || echo "WARNING: No spec files found"
+
+# Check test files exist (TDD — ralph should have written these before implementing)
+git diff --name-only HEAD~10 HEAD 2>/dev/null | grep -E "(\.test\.|\.spec\.)" | head -20
+# If the above is empty for a feature that was just implemented → flag TDD_VIOLATION
+```
+
+Document findings:
+- If spec files exist but no test files reference them → add `TDD_VIOLATION: [list of stories]` to TESTER_REPORT
+- If no spec files exist → note `SDD_MISSING: spec-writer was not run` in TESTER_REPORT
+- These are **warnings, not blockers** for tester — but orchestrator must address them
+
 If **any** of 0a–0d fail → output `PREFLIGHT_FAILED: { phase, error }` and stop.
 
 ---
@@ -308,3 +323,5 @@ TESTER_REPORT: {
 6. **You will not report READY** until you have personally clicked through the main user flows
 7. **Never modify production code** — only `*.test.*`, `*.spec.*`, `e2e/`, `docs/`
 8. **A passing unit test suite does not mean the UI works** — you must test both
+9. **If E2E was not executed** (Phase 1 Smoke Tests skipped for any reason), do NOT emit `TESTER_REPORT`. Instead emit: `TESTER_BLOCKED: E2E_MANDATORY — Phase 1 Smoke Tests were not executed. Resolve the blocker and re-run.` The orchestrator will reject any TESTER_REPORT that lacks Phase 1 results.
+10. **You will verify TDD happened**: check Phase 0e results. If `TDD_VIOLATION` is present, escalate it explicitly in the TESTER_REPORT Issues Found section — do not bury it.
