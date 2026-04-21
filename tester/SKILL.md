@@ -205,10 +205,46 @@ playwright-cli unroute
 
 ## Phase 4 — Unit & Integration Tests
 
-Run existing test suite:
+### ⚠️ CRITICAL: Memory Safety — ALWAYS apply before running tests
+
+**Why**: Vitest defaults to 1 worker per CPU core. On M-series Macs (12–18 cores), each worker can consume 4+ GB. 18 workers × 4 GB = 72 GB demand → OOM crash.
+
+**Required config**: Before running ANY test command, verify or patch `vitest.config.ts`:
+
+```typescript
+// vitest.config.ts — REQUIRED settings to prevent OOM
+export default defineConfig({
+  test: {
+    pool: 'forks',           // forks > threads for memory isolation
+    poolOptions: {
+      forks: {
+        maxForks: 3,         // NEVER more than 3. Default = CPU count = crash.
+        minForks: 1,
+      }
+    },
+    maxConcurrency: 3,
+    // Optional: limit memory per worker
+    // heap: 512,            // uncomment if still crashing
+  }
+})
+```
+
+If `vitest.config.ts` does NOT have `maxForks` set → **patch it before running tests**. Do not skip this.
+
+**Run tests with explicit limits as fallback:**
 ```bash
+# Safest command — always use this
+npx vitest run --pool=forks --poolOptions.forks.maxForks=3 2>&1 | tee evidence/unit-test-results.txt
+
+# If vitest.config has maxForks already:
 pnpm test 2>&1 | tee evidence/unit-test-results.txt
-# or: bun test, npx vitest run, npx jest --no-coverage
+```
+
+**Check available RAM before running:**
+```bash
+# macOS — check available memory
+vm_stat | grep "Pages free" | awk '{print $3 * 4096 / 1024 / 1024 / 1024 " GB free"}'
+# If < 8 GB free → use maxForks=1 or run serially with --singleFork
 ```
 
 If no tests exist for the feature, write targeted unit tests for:
@@ -325,3 +361,5 @@ TESTER_REPORT: {
 8. **A passing unit test suite does not mean the UI works** — you must test both
 9. **If E2E was not executed** (Phase 1 Smoke Tests skipped for any reason), do NOT emit `TESTER_REPORT`. Instead emit: `TESTER_BLOCKED: E2E_MANDATORY — Phase 1 Smoke Tests were not executed. Resolve the blocker and re-run.` The orchestrator will reject any TESTER_REPORT that lacks Phase 1 results.
 10. **You will verify TDD happened**: check Phase 0e results. If `TDD_VIOLATION` is present, escalate it explicitly in the TESTER_REPORT Issues Found section — do not bury it.
+11. **NEVER run `pnpm test` or `vitest` without `maxForks=3`** on developer machines. Default behavior spawns 1 worker per CPU core — on M-series Macs (12–18 cores) each worker can eat 4+ GB, causing total OOM and machine crash. Always patch `vitest.config.ts` first or pass `--poolOptions.forks.maxForks=3` explicitly.
+12. **Run unit tests and E2E sequentially, never in parallel.** Unit tests (Phase 4) must complete before Playwright smoke tests start. Running both simultaneously doubles memory pressure.
