@@ -100,6 +100,7 @@ You are [role] on **[project name]**. [one-line description].
 | TDD | Test files in `git diff` before launching evaluator |
 | Karpathy | Sprint contract must have Assumptions section |
 | E2E | TESTER_REPORT rejected without Playwright screenshots |
+| OOM | **NEVER** run `pnpm test` without `maxForks: 3` in vitest.config.ts — machine will crash |
 
 ## Skills Quick Reference
 
@@ -165,6 +166,17 @@ When you learn a preference or correct a mistake, **immediately update `memory.m
 - TESTER_REPORT without Playwright-CLI screenshots = rejected
 - Smoke tests required for every deployable feature
 - TESTER_BLOCKED: E2E_MANDATORY emitted if E2E phase is skipped
+
+### Law 6 — OOM Prevention (macOS M-series)
+- **BEFORE running any test command**, verify `vitest.config.ts` has:
+  ```ts
+  pool: "forks",
+  poolOptions: { forks: { maxForks: 3 } },
+  maxConcurrency: 3,
+  ```
+- Default Vitest = 1 worker/CPU core → 18 workers on M5 Pro → machine crash
+- If the config is missing these settings, **patch it first**, then run tests
+- Never run `pnpm test` or `vitest` without this — the machine WILL run out of RAM
 
 ---
 
@@ -251,6 +263,12 @@ Save memory → Update memory.md with decisions, learnings, corrections
 - Unit/Integration: [e.g., Vitest]
 - E2E: [e.g., Playwright + playwright-cli]
 - Commands: `pnpm test`, `pnpm test:e2e`
+- **⚠️ REQUIRED** — vitest.config.ts must always have:
+  ```ts
+  pool: "forks",
+  poolOptions: { forks: { maxForks: 3 } },
+  maxConcurrency: 3,
+  ```
 
 ## Deployment
 - Platform: [e.g., Vercel]
