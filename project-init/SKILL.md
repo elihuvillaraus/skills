@@ -167,7 +167,30 @@ When you learn a preference or correct a mistake, **immediately update `memory.m
 - Smoke tests required for every deployable feature
 - TESTER_BLOCKED: E2E_MANDATORY emitted if E2E phase is skipped
 
-### Law 6 — OOM Prevention (macOS M-series)
+### Law 6 — No Time Estimates
+- Never output "Xh" or "X hours". Use: dependency graph + `parallelizable_with` + `depends_on` + `critical_path` + round-trips (1 round-trip ≈ 25-40 min empirically)
+- Wrong estimates erode trust and distort planning; dependency structure does not
+
+### Law 7 — No "Demo" Framing
+- Re-read the EPIC's Mission paragraph before drafting any PRD
+- Ban the words "demo", "test data", "mock data", "sample data" in PRDs that touch production tables
+- If something is genuinely a sandbox/sandbox feature, document it explicitly with scope boundaries
+
+### Law 8 — Migrations Must Be Applied
+- Drizzle migrations do NOT auto-run in production (unlike Python/Django/backend migrations)
+- After every wave, check `migrations` field of all RALPH_DONE signals
+- Apply `pnpm drizzle-kit push` or `psql $DATABASE_URL -f <path>` before serving traffic that depends on new columns
+- Ralph must include migration apply command in every RALPH_DONE that adds a migration
+
+### Law 9 — Flag Composition Audit
+- Every feature flag has a parent gate; deploying the child while parent=false = broken dark launch
+- Before wave deploy: list every v2_* flag introduced, check full parent chain, verify mount condition resolves to true in prod
+- Add `## Flag Composition` section to any PRD that introduces or depends on flags
+
+### Law 10 — Verify "Uses Existing X" Claims
+- Before architect publishes PRD: grep every "uses existing service/component/function" claim
+- If unverifiable: mark `⚠️ VERIFY` inline — ralph must confirm before touching code
+- Ralph must verify all such claims in Step 1 before writing a single line; unverifiable = RALPH_BLOCKED
 - **BEFORE running any test command**, verify `vitest.config.ts` has:
   ```ts
   pool: "forks",

@@ -26,6 +26,10 @@ Every agent in every phase operates under these laws. **No exceptions. No skippi
 | 3 | **TDD Mandatory** — ralph writes ALL tests from spec before any impl code | Evaluator + Orchestrator | `RALPH_READY_FOR_EVAL` with no test files = auto-rejected, back to ralph |
 | 4 | **Karpathy Gate** — ralph states assumptions + simplest approach before Sprint Contract | Ralph (enforced in sprint contract) | Sprint contract without Assumptions section = rejected |
 | 5 | **E2E Non-Negotiable** — tester runs `playwright-cli` through all major flows | Orchestrator | `TESTER_REPORT` without E2E screenshots = rejected, tester re-runs |
+| 6 | **No Time Estimates** — never output "Xh" or "X hours" for any task | Orchestrator | Replace with: dependency graph + parallelizable_with + round-trips |
+| 7 | **No "Demo" Framing** — re-read EPIC Mission before any PRD draft; ban "demo/test data/sample data" | Orchestrator | Remove word; clarify whether this is production delivery or explicit sandbox |
+| 8 | **Migrations Must Be Applied** — Drizzle migrations DO NOT auto-run in prod | Orchestrator | Check `migrations` field of every RALPH_DONE; apply before serving traffic |
+| 9 | **Flag Composition Audit before deploy** — every feature flag chain verified | Orchestrator | Flag deployed but parent=false = dark launch or broken; flip parent or document |
 
 > These are **embedded here** so they don't have to be "found" in sub-skill files.
 > Any subagent that ignores them is violating the pipeline contract.
@@ -173,6 +177,19 @@ For Priority N (parallel ralph instances):
 **Key principle**: Documenter only commits AFTER evaluator approves. Never before.
 
 Then run Phase 4 before starting Priority N+1.
+
+**⚠️ Wave Deploy Checklist** — Run this before approving any wave for deploy:
+
+1. **Migrations applied?** — Collect all `"migrations"` fields from every RALPH_DONE in this wave. For each non-`"none"` entry: confirm the SQL was applied to the production DB. Drizzle migrations do NOT auto-run. Command: `pnpm drizzle-kit push` or `psql $DATABASE_URL -f <path>`. If not applied, apply before allowing traffic to the new code.
+
+2. **Flag composition verified?** — For every feature flag introduced or touched in this wave:
+   - List its parent gates
+   - Confirm every gate in the chain is `true` in production
+   - If any parent flag defaults to `false` → the work is a dark launch (verify this is intentional) OR flip the parent in a hotfix PRD before deploy
+
+3. **Evidence-backed claims only** — When reporting "X is done" or "Y is shipped", cite a commit hash, file path, or grep result. No assumed completions.
+
+4. **EPIC Mission re-read** — Before drafting any subsequent PRD for this sprint, re-read the EPIC's Mission paragraph verbatim. If any pending PRD uses the word "demo", "test data", "mock data", or "sample" in reference to production tables → rewrite before sending to architect.
 
 ---
 
