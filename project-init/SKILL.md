@@ -123,6 +123,22 @@ You are [role] on **[project name]**. [one-line description].
 
 When you learn a preference or correct a mistake, **immediately update `memory.md`** under the relevant section. Do not wait until end of session.
 
+## Skill Logging (required)
+
+When invoking any skill, log it:
+```bash
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)|SKILL_NAME|$(basename $PWD)|REASON" >> ~/.agents/skill-usage.log
+```
+
+## Codebase Navigation
+
+If `codebase-memory-mcp` is configured, **always use it before reading files**:
+- `get_architecture` — overview of the whole codebase
+- `search_code "symbol"` — find functions/classes (replaces grep)
+- `get_impact "file.ts"` — what breaks if this changes
+- `find_http_routes` — list all API endpoints
+This uses 120× fewer tokens than file-by-file exploration.
+
 ## Context Files
 
 - `context/pipeline.md` — Full Pipeline Laws + TDD/SDD/Engram/Karpathy

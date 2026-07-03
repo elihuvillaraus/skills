@@ -21,10 +21,16 @@ Invoke ralph by giving it a specific user story and PRD path:
 ### Step 1 — Read + Understand
 
 1. **Read the PRD** — Load the full PRD file. Find the assigned User Story (`USxxx`).
+   - **Parse Quality Gates** — Extract the PRD header's required quality gates before implementation starts. Copy the exact commands into your Sprint Contract so testing obligations are known before code changes.
 2. **Understand scope** — Read the **Files** list. You own only those files. Touch nothing else.
-3. **Verify "uses existing X" claims** — Before opening any file to code, list every claim in the story that says "uses existing X", "calls Y", "extends Z", or "based on current W". Grep each one:
-   ```bash
-   grep -r "<symbol or function name>" src/ --include="*.ts" --include="*.tsx" -l
+   - **Owned files preflight** — Before writing code, list the owned files from the story and the planned change for each. If implementation requires writing any file outside that list, output `RALPH_BLOCKED` instead of expanding scope.
+3. **Verify "uses existing X" claims** — Before opening any file to code, list every claim in the story that says "uses existing X", "calls Y", "extends Z", or "based on current W". Use `codebase-memory-mcp` if available — it is faster and uses far fewer tokens than grep:
+   ```
+   # Preferred: codebase-memory-mcp MCP tools
+   search_code "<symbol or function name>"
+   get_call_graph "<symbol>"
+   # Fallback if MCP not available:
+   grep -r "<symbol>" src/ --include="*.ts" --include="*.tsx" -l
    ```
    If any claim cannot be verified (symbol not found, file doesn't exist, export missing): **STOP** — do not write code around it. Output `RALPH_BLOCKED: Cannot verify "[claim]". Expected to find [X] at [path/pattern]. Not found. Please clarify before implementation starts.`
 4. **Read context** — If `AGENTS.md` exists at the project root, read it first. Then search Engram for relevant past patterns before loading technical files:
@@ -35,7 +41,8 @@ Invoke ralph by giving it a specific user story and PRD path:
    engram search "<domain> rejection OR failure OR pitfall" --type learning --limit 3
    ```
    Apply any learnings found (past rejections, known pitfalls, established patterns). Then load any files referenced in Technical Specs. Understand existing patterns before writing a single line.
-5. **Run existing tests before coding** — Run the project's test suite to establish a pre-coding baseline. Note any tests that already fail. This lets you distinguish pre-existing failures from regressions you introduce. **Do not fix pre-existing test failures** — they are out of scope and fixing them risks unintended side effects. Only fix regressions that your changes introduce.
+5. **Package manager detection** — Identify the package manager from lockfiles before running commands: `pnpm-lock.yaml` → `pnpm`, `yarn.lock` → `yarn`, `bun.lockb` or `bun.lock` → `bun`, otherwise `npm` when `package-lock.json` exists. Use that manager consistently for install, test, lint, typecheck, and dev-server commands.
+6. **Run existing tests before coding** — Run the project's test suite to establish a pre-coding baseline. Note any tests that already fail. **Baseline evidence** must include the exact command, exit code, and failing test identifiers or "none". This lets you distinguish pre-existing failures from regressions you introduce. **Do not fix pre-existing test failures** — they are out of scope and fixing them risks unintended side effects. Only fix regressions that your changes introduce.
 
 ### Step 2 — Think Before Coding (Karpathy Gate)
 
@@ -74,6 +81,7 @@ This contract tells the evaluator exactly how to verify your work. Be specific �
 
 **If a spec file exists** (`docs/tasks/<feature>/specs/USxxx-<slug>-spec.md`), read it now.
 The spec's "Test Cases" section defines exactly what tests to write.
+If the PRD, spec, or existing code contradict each other, report **PRD/spec drift** with the exact conflicting lines or symbols and output `RALPH_BLOCKED` instead of silently choosing one source.
 
 **Write all tests BEFORE writing implementation code.** They will fail — that is correct.
 
@@ -81,6 +89,8 @@ The spec's "Test Cases" section defines exactly what tests to write.
 # Create/update test file for this story
 # Test file location: match project conventions (e.g., src/features/X/__tests__/X.test.ts)
 ```
+
+After writing or changing tests, run the most specific **targeted test command** for the owned test file before the full suite. Use the detected package manager and the project's existing test runner flags rather than inventing new tooling.
 
 **TDD cycle for each function in the spec:**
 
@@ -98,6 +108,10 @@ The spec's "Test Cases" section defines exactly what tests to write.
 - Use `beforeEach`/`afterEach` (or equivalent) for setup and teardown of mocks, DB state, or fixtures
 - Mock external services and third-party calls — tests must not make real network requests
 
+**Flaky test guard:** If a test passes on first run but fails intermittently, it is a flaky test — not an acceptable state. Common causes: time-dependent assertions, non-deterministic ordering, shared global state. Fix root cause before signaling done. Do not use `--retry` flags to hide flakiness.
+
+**Coverage:** If the project has a coverage threshold configured (in `vitest.config`, `jest.config`, or similar), run `npm test -- --coverage` and verify the branch/line coverage does not drop below the project's threshold. Do not merge with a coverage regression.
+
 **Required test categories (from spec section 5):**
 - Happy path (main success scenario)
 - Validation errors (empty inputs, wrong formats)
@@ -113,24 +127,26 @@ Write production-quality code following the Technical Specs exactly:
 - Match the types, function signatures, and import paths from the spec; use the project's existing path aliases (e.g., `@/lib/...`) consistently; use `import type` for type-only imports (keeps bundles clean and avoids circular dependency issues)
 - Follow existing patterns in the codebase (naming, error handling, exports)
 - No magic strings or magic numbers — extract repeated literals into named constants or enums so intent is explicit (e.g., `const SESSION_EXPIRY_SECONDS = 86400` instead of `86400` inline)
+- Always throw structured `Error` objects with descriptive messages (e.g., `throw new Error('User not found')`) — never throw raw strings or numbers; never swallow errors with empty `catch {}` blocks
 - No `any` types in production code or test files; no `@ts-ignore` or `@ts-expect-error` comments (they bypass type checking — fix the type instead); no placeholder code; no TODOs
 - No `console.log`, `console.debug`, `console.error`, `console.warn`, or any temporary debug statements — remove all before signaling
 - No commented-out code — delete dead code entirely rather than commenting it out
 - No unused imports — remove any import that is not referenced in the file
 - Code comments: only add comments when the logic genuinely needs clarification; do not narrate obvious code
-- **If the story touches a database schema**: verify the change is backward-compatible (additive only — new nullable columns or new tables). If it's a breaking change, add a rollback migration alongside the forward migration and document both in the PR summary.
-- **If the story performs multi-step database mutations**: wrap related writes in a single transaction so partial failures don't corrupt data. Also audit for N+1 query patterns — batch or join instead of looping queries.
-- **If the story creates or modifies UI components**: verify keyboard navigation works (interactive elements reachable by Tab), semantic HTML is used (`<button>` not `<div onClick>`, `<label>` associated with inputs), and meaningful `aria-label` or `alt` text is present where needed.
-- **If the story calls external APIs or third-party services**: implement timeout handling (never await an external call without a timeout bound) and surface errors to the caller — do not swallow failures silently.
-- **If the story accepts user input**: use parameterized queries only for database writes (never string-concatenate SQL); escape or sanitize output for HTML contexts to prevent XSS; validate and reject unexpected input shapes at the boundary (not deep in business logic).
+- **If the story touches a database schema**: verify the change is backward-compatible (additive only — new nullable columns or new tables). If it's a breaking change, add a rollback migration alongside the forward migration and document both in the PR summary. **Migration verification** must include the exact apply command, rollback command when present, and evidence that generated SQL matches the intended schema change.
+- **If the story performs multi-step database mutations**: wrap related writes in a single transaction so partial failures don't corrupt data. Also audit for N+1 query patterns — batch or join instead of looping queries. For list endpoints returning potentially large datasets, prefer cursor-based (keyset) pagination over offset pagination — cursor pagination is stable under concurrent inserts and performs better at scale. Consider **idempotency** for retries, duplicate form submissions, webhook replays, and background jobs; add uniqueness guards or safe no-op handling where the domain requires it. For transient failures (network blips, DB connection timeouts), implement retry logic with exponential backoff — do not retry immediately in a tight loop. Cap retries at 3 attempts maximum.
+- **If the story creates or modifies UI components**: for Next.js App Router projects, place `"use client"` at the top of any component that uses browser-only APIs, React hooks, or event handlers — Server Components cannot use these. Prefer Server Components by default; add `"use client"` only when necessary to minimize client-side bundle size. For React components, ensure every `useEffect` that sets up subscriptions, timers, or event listeners returns a cleanup function to prevent memory leaks. For effects that trigger async fetches, use `AbortController` to cancel in-flight requests on cleanup and guard against stale-closure race conditions (e.g., a slow request completing after a faster one) (e.g., `return () => subscription.unsubscribe()`). Verify keyboard navigation works (interactive elements reachable by Tab), semantic HTML is used (`<button>` not `<div onClick>`, `<label>` associated with inputs), focus order matches the visual flow, and controls/images expose **screen-reader accessible names** through text, labels, `aria-label`, or `alt` text. Capture **screenshot evidence** before and after visible changes, or explicitly state why the story has no visual surface. If the story implements **optimistic UI updates** (updating local state before the server confirms), trigger an optimistic rollback to the previous state on request failure — never leave the UI diverged from server state after an error. If the story implements **optimistic UI updates** (updating local state before the server confirms), ensure the optimistic change is rolled back on request failure.
+- **If the story calls external APIs or third-party services**: implement timeout handling (never await an external call without a timeout bound — use a 5000ms default for HTTP calls, 30000ms for file uploads/downloads) and surface errors to the caller — do not swallow failures silently. Ensure all async functions have explicit error handling — no `async` function should allow unhandled Promise rejections to bubble uncaught to the runtime (use `try/catch` or `.catch()`). Never suppress `async` errors silently.
+- **If the story adds or changes API routes, RPC procedures, or webhooks**: add **API contract checks** that verify expected status codes (including 404 for missing resources, 400 for validation errors, 401/403 for auth failures), response body shape, error body shape, and authorization behavior. For browser-facing APIs, set appropriate CORS (`Access-Control-Allow-Origin`) headers — never use wildcard `*` for authenticated endpoints. Prefer existing request helpers and mock external dependencies.
+- **If the story accepts user input**: use parameterized queries only for database writes (never string-concatenate SQL); escape or sanitize output for HTML contexts to prevent XSS; validate and reject unexpected input shapes at the boundary (not deep in business logic). For file upload endpoints, enforce a maximum file size limit and restrict accepted MIME types — reject oversized payloads with a 413 status before processing.
 
 ### Step 5 — Quality Gates
 
-Before running gates: ensure dependencies are installed (`npm install` / `pnpm install` / `yarn` — match the lockfile present; if install fails, try deleting `node_modules` and the lockfile and reinstalling). Run the Quality Gates defined in the PRD header. For TypeScript projects, always run `tsc --noEmit` to catch compilation errors even if the PRD's Quality Gates don't list it. If the project has a linter configured (eslint, biome, or similar — check `package.json` scripts for a `lint` script), run it and fix all lint errors before signaling done. If existing tests fail after your implementation (tests that were passing before coding), treat them as regressions and fix them — do not signal done with failing tests introduced by your changes. Fix all errors before signaling done.
+Before running gates: ensure dependencies are installed (`npm install` / `pnpm install` / `yarn` — match the lockfile present; if install fails, try deleting `node_modules` and the lockfile and reinstalling). Run the Quality Gates defined in the PRD header. For TypeScript projects, always run `tsc --noEmit` to catch compilation errors even if the PRD's Quality Gates don't list it. If `tsconfig.json` has `"strict": true`, your code must pass with zero strict-mode violations — do not add `// @ts-ignore` to bypass strictness. If the project has a linter configured (eslint, biome, or similar — check `package.json` scripts for a `lint` script), run it and fix all lint errors before signaling done. Compare every result with the pre-coding baseline: **New failures relative to baseline** are regressions and must be fixed even when unrelated baseline failures remain. If existing tests fail after your implementation (tests that were passing before coding), treat them as regressions and fix them — do not signal done with failing tests introduced by your changes. Fix all errors before signaling done.
 
-### Step 5 — Signal for Evaluation
+### Step 6 — Signal for Evaluation
 
-Before signaling: verify the dev server is running and responding. Detect the actual port by checking `package.json` scripts or the server startup output — do not assume port 3000 if the project configures a different port. Verify with `curl -s http://localhost:<detected-port> | head -1` (or equivalent). If the server fails to start, fix the issue — do not signal until the app is live. Also review `git diff --name-only` to confirm only your assigned story's files are modified — if unexpected files appear, undo those changes before signaling.
+Before signaling: verify the dev server is running and responding. Detect the actual port by checking `package.json` scripts or the server startup output — do not assume port 3000 if the project configures a different port. Verify with `curl -s http://localhost:<detected-port> | head -1` (or equivalent). If the server fails to start, fix the issue — do not signal until the app is live. Run a lightweight **secrets scan** over the diff for API keys, tokens, private keys, and dotenv changes; remove any accidental secret before reporting readiness. Also review `git diff --name-only` to confirm only your assigned story's files are modified — if unexpected files appear, undo those changes before signaling. Include a concise **diff summary** that maps each owned file to the behavior changed and acceptance criteria satisfied.
 
 When implementation is complete, output:
 
@@ -140,7 +156,9 @@ RALPH_READY_FOR_EVAL: {
   "files_modified": ["path/to/file.ts"],
   "quality_gates": "passed",
   "sprint_contract": "<paste the sprint contract from Step 2>",
+  "diff_summary": "<owned file -> behavior changed and acceptance criteria satisfied>",
   "iteration": 1,
+  "commands_run": [{"command": "<exact command>", "exit_code": 0, "result": "passed"}],
   "migrations": "<if any Drizzle/SQL migration was added: path + apply command e.g. 'pnpm drizzle-kit push' or 'psql $DATABASE_URL -f path/to/0012.sql'. 'none' if no migration.>",
   "feature_flags": "<if any feature flag was introduced: flag name, default value, parent flag it depends on, and mount condition. 'none' if no flags.>"
 }
@@ -180,6 +198,8 @@ RALPH_DONE: {
   "evaluator": "approved",
   "iterations": 1,
   "summary": "One sentence describing what was implemented and which acceptance criteria it satisfies.",
+  "diff_summary": "<owned file -> behavior changed and acceptance criteria satisfied>",
+  "commands_run": [{"command": "<exact command>", "exit_code": 0, "result": "passed"}],
   "migrations": "<migration file path + apply command, or 'none'>",
   "feature_flags": "<flag name, default, parent gate, mount condition, or 'none'>"
 }
