@@ -1,390 +1,230 @@
 ---
 name: orchestrator
-description: "Runs the full feature pipeline: research → architect → implement → document → test → report. Use when the user defines a feature objective and wants it fully implemented end-to-end without supervision. Triggered by: 'build this', 'implement end-to-end', 'full pipeline', 'orchestrate', or when the user describes a vision and says 'go'."
+description: "THE entry point for any non-trivial task. Runs the full feature pipeline: design → research → architect → spec → implement (TDD) → evaluate → test (E2E) → document → report. You only need to remember this one skill — it calls everything else. Triggered by: 'build this', 'implement', 'full pipeline', 'orchestrate', 'plan and build', or any feature objective. Also the right choice when you don't know which skill to use."
 ---
 
-# Orchestrator
+# Orchestrator — The One Skill to Rule Them All
 
-You are the **pipeline supervisor**. You coordinate the full feature development lifecycle using specialized subagents. The user gives you an objective — you deliver a complete, tested, documented implementation.
+You are the **pipeline supervisor**. The user gives you an objective. You coordinate the full lifecycle from design to deploy using specialized subagents. **The user should never have to remember individual sub-skills** — they say what they want, you decide which agents to call and when.
+
+```
+User says "build X"  →  you run the full pipeline.
+User says "plan X"   →  you run Phase 0–2 and stop.
+User says "just code X" → you skip design, run Phase 1–5.
+User says "test X"   →  you run Phase 5 only.
+```
 
 ## Prerequisites
 
-This flow requires autopilot mode with all permissions granted:
-- Start the session with: `copilot --allow-all --max-autopilot-continues 50`
-- Or during a session: `/allow-all` then `Shift+Tab` to enter autopilot mode
+Autopilot mode with all permissions:
+```bash
+copilot --allow-all --max-autopilot-continues 50
+# then Shift+Tab to enter autopilot mode
+```
 
 ---
 
 ## ⚠️ Pipeline Laws — Always Active, Never Optional
 
-Every agent in every phase operates under these laws. **No exceptions. No skipping.**
+Every agent in every phase operates under these laws. **Orchestrator enforces all of them — subagents do not need to find them elsewhere.**
 
-| # | Law | Who checks | Violation response |
-|---|-----|------------|-------------------|
-| 1 | **Engram Always** — load at Phase 0, save at Phase 5 | Orchestrator | Skip = pipeline incomplete, run Phase 0 before retrying |
-| 2 | **SDD Before Code** — `SPEC_DONE` for every story before any ralph starts | Orchestrator | No spec = block ralph launch, return to Phase 2.5 |
-| 3 | **TDD Mandatory** — ralph writes ALL tests from spec before any impl code | Evaluator + Orchestrator | `RALPH_READY_FOR_EVAL` with no test files = auto-rejected, back to ralph |
-| 4 | **Karpathy Gate** — ralph states assumptions + simplest approach before Sprint Contract | Ralph (enforced in sprint contract) | Sprint contract without Assumptions section = rejected |
-| 5 | **E2E Non-Negotiable** — tester runs `playwright-cli` through all major flows | Orchestrator | `TESTER_REPORT` without E2E screenshots = rejected, tester re-runs |
-| 6 | **No Time Estimates** — never output "Xh" or "X hours" for any task | Orchestrator | Replace with: dependency graph + parallelizable_with + round-trips |
-| 7 | **No "Demo" Framing** — re-read EPIC Mission before any PRD draft; ban "demo/test data/sample data" | Orchestrator | Remove word; clarify whether this is production delivery or explicit sandbox |
-| 8 | **Migrations Must Be Applied** — Drizzle migrations DO NOT auto-run in prod | Orchestrator | Check `migrations` field of every RALPH_DONE; apply before serving traffic |
-| 9 | **Flag Composition Audit before deploy** — every feature flag chain verified | Orchestrator | Flag deployed but parent=false = dark launch or broken; flip parent or document |
-
-> These are **embedded here** so they don't have to be "found" in sub-skill files.
-> Any subagent that ignores them is violating the pipeline contract.
+| # | Law | Violation response |
+|---|-----|--------------------|
+| 1 | **Engram Always** — load at Phase 0, save at end | Re-run Phase 0 before retrying anything |
+| 2 | **SDD Before Code** — `SPEC_DONE` before any ralph | Block ralph, return to Phase 2.5 |
+| 3 | **TDD Mandatory** — tests written BEFORE impl code | No test files in diff = auto-reject ralph |
+| 4 | **Karpathy Gate** — Sprint Contract must have Assumptions section | Reject Sprint Contract without it |
+| 5 | **E2E Non-Negotiable** — playwright-cli through all major flows | Reject TESTER_REPORT without screenshots |
+| 6 | **No Time Estimates** — use dependency graph + round-trips instead | Replace any "Xh" with parallelizable_with/depends_on |
+| 7 | **No "Demo" Framing** — re-read EPIC Mission; ban demo/test data/sample in prod PRDs | Rewrite before sending to architect |
+| 8 | **Migrations Must Be Applied** — Drizzle does NOT auto-run | Check `migrations` field of every RALPH_DONE before traffic |
+| 9 | **Flag Composition Audit** — verify full flag chain before deploy | Dark launch risk if parent flag = false |
+| 10 | **codebase-memory first** — use MCP graph queries before reading files | 120× fewer tokens; grep only as fallback |
+| 11 | **Día del Juicio for high stakes** — run dual judges before: PRD→implementation, design→code, any wave deploy | Skip only for trivial single-file changes |
+| 12 | **Log skill usage** — every skill invocation logged to `~/.agents/skill-usage.log` | `echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)\|skill\|project\|reason" >> ~/.agents/skill-usage.log` |
 
 ---
 
 ## The Pipeline
 
-### Phase 0 — Memory + Context Init (parallel)
+### Phase 0 — Memory + Context Init
 
-Run both in parallel — neither blocks Phase 1:
-
-**0a. Load Engram context** (persistent cross-session memory):
+**0a. Engram context**:
 ```bash
 engram context
+engram search "<feature keywords>" --type architecture --limit 5
 ```
-This returns architecture decisions, past learnings, and last session summary for this project.
-If engram is not installed: `brew install gentleman-programming/tap/engram`
+Apply past decisions. Don't repeat past mistakes.
 
-**0b. Always On Memory** (session-scoped markdown):
-Load the `always-on-memory` skill:
-- Initialize `docs/ALWAYS-ON-MEMORY.md` with Session Info and objective
-- Create skeleton for USER-JOURNEY tracking
-- Prepare `docs/USER-TASKS.md` for auto-detection of user actions
+**0b. Always-On Memory**: Initialize `docs/ALWAYS-ON-MEMORY.md` with session info + objective.
 
-At the end of the pipeline (Phase 5), save a session summary to Engram:
-```bash
-engram save "Session $(date +%Y-%m-%d): <feature name>" \
-  "<what was built, decisions made, blockers resolved, next steps>" \
-  --type session
+**0c. Codebase index** (if `codebase-memory-mcp` available):
 ```
+# Say "Index this project" on first run, then:
+get_architecture   # full overview
+find_http_routes   # existing API surface
+```
+Use graph queries throughout — never read files when a graph query answers the question.
+
+---
+
+### Phase 0.5 — Design (optional, for UI-heavy features)
+
+If the feature requires new screens or visual components:
+1. Check if a design brief exists (`docs/design-brief.md` or similar)
+2. If not: gather brief from user (screens needed, style direction, existing design tokens)
+3. Launch `/open-pencil`:
+   > "Generate screens for [feature] from [design brief path]"
+4. Run `/dia-del-juicio` on the design brief + generated screens **before** proceeding to architecture
+5. Wait for `JUICIO_APROBADO` → proceed with design file as reference for architect
+
+Skip this phase if: pure backend feature, CLI tool, or user says "skip design".
 
 ---
 
 ### Phase 1 — Research (parallel)
 
-Launch 4 `@researcher` subagents simultaneously, each investigating one angle:
+Launch 4 `@researcher` subagents simultaneously:
 
 | Subagent | Angle |
 |----------|-------|
 | researcher-1 | Technical feasibility: existing services, APIs, DB schema impact |
 | researcher-2 | UX/product: user journey, edge cases, error states |
-| researcher-3 | Codebase patterns: conventions, reusable components, anti-patterns to avoid |
+| researcher-3 | Codebase patterns: conventions, reusable components, anti-patterns |
 | researcher-4 | Risks: breaking changes, performance, security, scope creep |
 
-Wait for all 4 to complete. Synthesize their findings into a **Research Summary** (keep it — architect will need it).
+> researcher-3 should use `codebase-memory-mcp` graph queries, not grep.
+
+Wait for all 4. Synthesize into **Research Summary**.
 
 ---
 
-### Phase 2 — Architecture
+### Phase 2 — Architecture (PRD)
 
-Pass the Research Summary + user's original objective to `@architect`.
+Pass Research Summary + objective + design files (if any) to `@architect`.
 
-The architect will:
-1. Load `always-on-memory` skill automatically
-2. Ask clarifying questions if needed
-3. Create `docs/tasks/<feature-name>/PRD-<feature-name>.md`
-4. Create empty `docs/tasks/<feature-name>/progress.md`
-5. Create a GitHub issue labeled `enhancement` or `bug` + `status: in-progress`
-6. Update `docs/ALWAYS-ON-MEMORY.md` with Key Decisions and Architecture Highlights
-7. Create initial `docs/USER-QA.md` skeleton based on USER-JOURNEY
-8. Identify and document `docs/USER-TASKS.md` from PRD analysis
-9. Return a summary of Priority groups and user stories
+Architect delivers: PRD with Priority groups, File Ownership, ACs, Flag Composition (if flags), Call Graphs (if client→server), DB confirmations (if enum maps).
 
-Review the PRD summary. If it looks right, continue. If not, ask the architect to revise.
-
-> **Note the GitHub issue number** from the architect's output — you'll reference it in commits and close it at the end.
+Review the PRD. **Before proceeding to specs:**
+→ Run `/dia-del-juicio` on the PRD
+→ Wait for `JUICIO_APROBADO` or apply required fixes first
 
 ---
 
-### Phase 2.5 — Spec Writing (parallel, SDD)
+### Phase 2.5 — Spec Writing (SDD, parallel with Phase 2)
 
-**Run in parallel with Phase 2** (spec writing can start once the PRD story list is known):
+One `@spec-writer` per user story, launched in parallel once story list is known:
+> "Write specs for USxxx from [PRD path]"
 
-For each user story in Priority 1 (or all stories if the feature is small):
-Launch one `@spec-writer` per story simultaneously:
-> "Write specs for USxxx from docs/tasks/<feature-name>/PRD-<feature-name>.md"
-
-The spec-writer will:
-1. Read the user story and acceptance criteria
-2. Search Engram for relevant architectural decisions
-3. Produce `docs/tasks/<feature-name>/specs/USxxx-<slug>-spec.md` with:
-   - Data model (types, DB schema)
-   - API contract (endpoints, request/response types)
-   - Service function signatures
-   - UI component interfaces
-   - **Test cases** (these become ralph's TDD starting point)
-4. Signal `SPEC_DONE`
-
-Wait for all `SPEC_DONE` signals before launching ralph instances.
-If spec is ambiguous: spec-writer signals `SPEC_BLOCKED` → ask architect to clarify → retry spec-writer.
-
-> **Why SDD?** The spec is the contract between architect and implementer.
-> Ralph writes tests against the spec FIRST (TDD), then minimal code to pass them.
-> This eliminates most evaluator rejections due to wrong interfaces or missing error handling.
+Each spec produces: types, API contracts, service signatures, UI interfaces, **test cases**.
+Wait for all `SPEC_DONE` before launching ralph.
 
 ---
 
-### Phase 3 — Implementation + Evaluation (TDD + Generator→Evaluator loop)
+### Phase 3 — Implementation + Evaluation (TDD loop)
 
-For each Priority group in the PRD (sequential between groups, parallel within):
+For each Priority group (sequential between groups, parallel within):
 
 ```
-For Priority N (parallel ralph instances):
-   1. Launch one @ralph per user story in this group.
-      Each ralph: "Implement USxxx from docs/tasks/<feature-name>/PRD-<feature-name>.md
-                   using spec at docs/tasks/<feature-name>/specs/USxxx-<slug>-spec.md"
-   
-   2. Ralph outputs a SPRINT CONTRACT before coding.
-      Sprint contract MUST include an "Assumptions" section (Karpathy Gate — Pipeline Law #4).
-      If ralph skips the sprint contract or omits the Assumptions section → reject, demand it.
-   
-   3. Ralph does TDD (Pipeline Law #3 — MANDATORY):
-      a. Reads spec file: docs/tasks/<feature-name>/specs/USxxx-<slug>-spec.md
-      b. Writes ALL test files from the spec FIRST (they fail — correct, that is the point)
-      c. Only then writes implementation code to make them pass
-      d. Triangulates edge cases defined in the spec
-   
-   4. Ralph implements → all spec tests pass → outputs RALPH_READY_FOR_EVAL.
-   
-   [PIPELINE LAW #3 CHECK — before launching evaluator]:
-   Run: git diff --name-only HEAD | grep -E "(\.test\.|\.spec\.)"
-   If output is empty → REJECT IMMEDIATELY: "RALPH_REJECTED: No test files found.
-   TDD is Pipeline Law #3. Read the spec, write failing tests first, then implement."
-   Do NOT launch evaluator until at least one test file exists in the diff.
-   
-   5. Launch @evaluator with the sprint contract + spec path + story context.
-      Evaluator uses playwright-cli to navigate the live app.
-      Evaluator returns EVALUATOR_APPROVED or EVALUATOR_REJECTED.
-   
-   6a. If EVALUATOR_APPROVED → run @guardian-angel before Phase 4:
-       "Run /guardian-angel on USxxx changes"
-       If GGA_APPROVED → proceed to Phase 4 (documenter commits).
-       If GGA_REJECTED → pass violations back to ralph for fix.
-   6b. If EVALUATOR_REJECTED → pass rejection back to ralph.
-       Ralph fixes → outputs RALPH_READY_FOR_EVAL (iteration 2).
-       Re-run evaluator. Max 3 iterations total.
-   6c. If EVALUATOR_ESCALATE (3 rejections) → pause, show user the unresolved failures.
-   
-   In parallel with the ralph+evaluator loop, run @tester for:
-   - Automated unit/integration tests (non-blocking)
-   - Generating USER-QA.md manual verification steps
+1. Launch one @ralph per story (parallel within group)
+   Each ralph: "Implement USxxx from [PRD] using spec at [spec path]"
+
+2. [Law #4 check] Sprint Contract must have Assumptions section
+
+3. [Law #3 check] TDD cycle:
+   a. Ralph writes failing tests from spec FIRST
+   b. Then writes minimum code to pass them
+   c. git diff must show test files before signaling
+
+4. Ralph → RALPH_READY_FOR_EVAL (includes migrations + feature_flags fields)
+
+5. [Law #3 gate] git diff --name-only HEAD | grep -E "(\.test\.|\.spec\.)"
+   Empty = REJECT. No evaluator until test files exist.
+
+6. Launch @evaluator → EVALUATOR_APPROVED or EVALUATOR_REJECTED
+   Max 3 iterations. Escalate after 3.
+
+7. If approved → @guardian-angel → if GGA_APPROVED → Phase 4
 ```
-
-**Key principle**: Documenter only commits AFTER evaluator approves. Never before.
-
-Then run Phase 4 before starting Priority N+1.
-
-**⚠️ Wave Deploy Checklist** — Run this before approving any wave for deploy:
-
-1. **Migrations applied?** — Collect all `"migrations"` fields from every RALPH_DONE in this wave. For each non-`"none"` entry: confirm the SQL was applied to the production DB. Drizzle migrations do NOT auto-run. Command: `pnpm drizzle-kit push` or `psql $DATABASE_URL -f <path>`. If not applied, apply before allowing traffic to the new code.
-
-2. **Flag composition verified?** — For every feature flag introduced or touched in this wave:
-   - List its parent gates
-   - Confirm every gate in the chain is `true` in production
-   - If any parent flag defaults to `false` → the work is a dark launch (verify this is intentional) OR flip the parent in a hotfix PRD before deploy
-
-3. **Evidence-backed claims only** — When reporting "X is done" or "Y is shipped", cite a commit hash, file path, or grep result. No assumed completions.
-
-4. **EPIC Mission re-read** — Before drafting any subsequent PRD for this sprint, re-read the EPIC's Mission paragraph verbatim. If any pending PRD uses the word "demo", "test data", "mock data", or "sample" in reference to production tables → rewrite before sending to architect.
 
 ---
 
 ### Phase 4 — Documentation (after each Priority group)
 
-Pass all `RALPH_DONE` signals from the completed group to `@documenter`.
-
-The documenter will:
-- Update PRD checkboxes
-- Append to `progress.md`
-- Create one atomic commit per completed story
-- **Update `docs/ALWAYS-ON-MEMORY.md`** with:
-  - Implementation learnings from ralph
-  - Blockers discovered and how they were resolved
-  - Technical insights from testing phase
-
-Then proceed to the next Priority group (back to Phase 3).
+`@documenter` commits approved stories, updates PRD checkboxes, appends to progress.md, updates ALWAYS-ON-MEMORY.md.
 
 ---
 
-### Phase 5 — Testing (parallel with implementation)
+### Phase 5 — Testing (E2E, parallel with Phase 3-4)
 
-**This phase runs in parallel with Phase 3-4 — it does NOT block the evaluator loop.**
+`@tester` with PRD path + all modified files.
 
-Launch `@tester` with:
-- The PRD path
-- The list of all modified files (from all RALPH_DONE signals)
+[Law #5 gate]: TESTER_REPORT must contain:
+- `smoke.passed` or `smoke.failed` (not N/A)
+- At least one screenshot in `evidence/screenshots/`
 
-Tester will:
-1. Run automated tests (unit, integration, E2E with playwright-cli)
-2. Generate detailed `docs/USER-QA.md` with manual verification steps
-3. Identify additional `docs/USER-TASKS.md` items discovered during testing
-4. Return `TESTER_REPORT`
+No screenshots = rejected. Re-run tester.
 
-> **Note**: The evaluator validates individual sprints; tester validates the whole feature end-to-end. Both are needed. Evaluator runs first; tester runs after all stories complete.
+---
 
-**[PIPELINE LAW #5 CHECK — E2E is Non-Negotiable]:**
-When you receive `TESTER_REPORT`, verify it contains:
-- `smoke.passed` or `smoke.failed` fields (not N/A)
-- At least one screenshot path in `evidence/screenshots/`
+### Phase 5.5 — Wave Deploy Checklist (before any deploy)
 
-If `TESTER_REPORT` lacks E2E results or screenshots → **REJECT**: "TESTER_REPORT rejected: Pipeline Law #5 requires playwright-cli E2E execution. Re-run tester and complete Phase 1 Smoke Tests."
-A passing unit test suite is NOT sufficient — E2E is required.
+Before approving deploy:
+1. **Migrations** — collect all `migrations` fields from RALPH_DONE. For each non-`none`: apply to prod DB. Drizzle does NOT auto-run.
+2. **Flag chain** — every v2_* flag introduced: verify parent chain resolves to `true` in prod. Dark launch if any parent = false.
+3. **Evidence** — every "X is done" claim backed by commit hash, file path, or grep result.
+4. **EPIC Mission** — re-read before any next PRD draft; no "demo" language in prod PRDs.
 
 ---
 
 ### Phase 6 — Final Report
 
-**First, close the GitHub issue** created in Phase 2:
+Close GitHub issue. Output structured completion report with: summary, artifacts, test results, what's next, blocked items.
 
+Save session to Engram:
 ```bash
-# Get the issue number from the architect's output (e.g., #42)
-gh issue edit <NUMBER> --repo OWNER/REPO --remove-label "status: in-progress" --add-label "status: done"
-gh issue close <NUMBER> --repo OWNER/REPO --comment "✅ Implemented in pipeline run. All stories complete. See progress.md for details."
-
-# Move to Shipped on the Mission Control board
-source ~/.config/marketinc/board.sh
-board_set_status "OWNER/REPO" <NUMBER> "Shipped"
-```
-
-Then output the structured completion report to the user:
-
-```markdown
-# ✅ Feature Complete: <feature-name>
-
-## Summary
-<one paragraph of what was built>
-
-## Session Memory
-- **Always On Memory**: `docs/ALWAYS-ON-MEMORY.md` (decisions, learnings, blockers)
-- **User QA Checklist**: `docs/USER-QA.md` (manual verification steps)
-- **User Tasks**: `docs/USER-TASKS.md` (actions only you can do)
-
-## Artifacts
-- **PRD**: `docs/tasks/<feature-name>/PRD-<feature-name>.md`
-- **Progress log**: `docs/tasks/<feature-name>/progress.md`
-- **GitHub issue**: https://github.com/OWNER/REPO/issues/N  ✅ closed
-
-## Stories completed: N/N
-| Story | Summary | Files |
-|-------|---------|-------|
-| US001 | ... | `src/...` |
-
-## Test Results
-- Unit tests: N passed, N failed
-- E2E tests: N passed, N failed
-- Verdict: ✅ READY | ⚠️ ISSUES FOUND
-
-## What's next
-1. **Review Always On Memory**: docs/ALWAYS-ON-MEMORY.md to understand decisions and learnings
-2. **Do Manual QA**: Follow steps in docs/USER-QA.md (mark ✅/❌ as you verify)
-3. **Complete User Tasks**: Follow docs/USER-TASKS.md (API keys, external integrations, etc.)
-4. **Provide feedback**: Leave comments in USER-QA.md if issues are found
-
-## Blocked items (if any)
-- USxxx: <reason> — needs manual intervention
+engram save "Session $(date +%Y-%m-%d): <feature>" "<what built, decisions, blockers, next>" --type session
 ```
 
 ---
 
-## How to invoke this flow
+## Quick Reference — When to use which sub-skill
 
-### Option A: Single prompt (recommended)
+| I want to... | Use |
+|---|---|
+| Design screens / UI | `/open-pencil` |
+| Validate a design, spec, or PRD before coding | `/dia-del-juicio` |
+| Write the implementation plan (PRD) | `/architect` |
+| Implement one story | `/ralph` |
+| Run all tests + E2E | `/tester` |
+| Commit + document | `/documenter` |
+| Code review | `/code-reviewer` |
+| Check skill usage stats | `/skill-tracking` |
+| Debug a complex architectural problem | `/software-architect` |
+| UI implementation only | `/eng-frontend` |
+| Backend/API only | `/eng-backend` |
+| Full pipeline, end to end | `/orchestrator` ← **this skill** |
 
-Start your session with:
-```bash
-copilot --allow-all --max-autopilot-continues 50
-```
-
-Then switch to autopilot mode (`Shift+Tab`) and enter:
-
-```
-/fleet Implement the following feature end-to-end using the orchestrator pipeline:
-
-**OBJECTIVE**: <your vision here>
-
-**FEATURE NAME**: <kebab-case-name>
-
-**CONTEXT**: <any constraints, existing flows to respect, design references>
-
-Follow the orchestrator skill: research → architect → implement (parallel by Priority) → document → test → report.
-```
-
-### Option B: Step by step (for more control)
-
-Use the same prompt but stay in interactive mode. The main agent will check in with you between phases.
+> **Default rule**: when in doubt, use `/orchestrator`. It will call the right sub-skills for you.
 
 ---
 
 ## Aborting mid-run
 
-Press `Ctrl+C` to stop at any point. The state is preserved in:
-- `docs/tasks/<feature-name>/progress.md` (what completed)
-- `docs/tasks/<feature-name>/PRD-<feature-name>.md` (unchecked = pending)
-
-Resume with: `Continue the orchestrator pipeline for <feature-name>, starting from Priority N`.
+`Ctrl+C` — state preserved in `progress.md` and PRD (unchecked = pending).
+Resume: `Continue orchestrator pipeline for <feature>, starting from Priority N`.
 
 ---
 
-## Team Roster — Specialists Available
+## Pre-assembled Teams (for multi-role tasks)
 
-Beyond the core pipeline skills (architect, ralph, documenter, tester), you now have access to a full agency roster. Use these as sub-agents in `/fleet` for specialized tasks within any phase.
+| Team | Use when |
+|------|---------|
+| `team-startup` | Building MVP fast |
+| `team-marketing-campaign` | Multi-channel campaign |
+| `team-enterprise-feature` | Complex feature with quality gates |
+| `team-product-discovery` | Full product discovery |
 
-### 🔧 Engineering
-| Skill | Use when |
-|-------|----------|
-| `eng-frontend` | UI/React/CSS work needed |
-| `eng-backend` | API design, DB schema, server logic |
-| `eng-senior` | Complex premium implementation (Laravel/Livewire/Three.js) |
-| `rapid-proto` | Fast POC, spike, quick iteration |
-| `code-reviewer` | PR review, code quality gate |
-| `devops` | CI/CD, Docker, infra, deployments |
-| `security-eng` | Threat modeling, vulnerability audit |
-| `data-eng` | Data pipelines, ETL, analytics infra |
-| `eng-ai` | ML models, AI integrations |
-| `sre` | SLOs, reliability, observability |
-| `tech-writer` | Documentation, API docs, README |
-| `mobile-builder` | Native iOS/Android or React Native |
-| `software-architect` | System design, DDD, architecture decisions |
-| `db-optimizer` | Schema design, query optimization, indexing |
-
-### 🎨 Design
-| Skill | Use when |
-|-------|----------|
-| `ux-architect` | CSS systems, frontend foundations, technical UX |
-| `ui-designer` | Design systems, component specs, visual design |
-| `ux-researcher` | User behavior, usability testing, personas |
-| `brand-guardian` | Brand consistency, identity review |
-| `visual-storyteller` | Multimedia, visual narrative |
-| `whimsy-injector` | Personality, delight, playful brand voice |
-| `image-prompt-eng` | AI image prompt crafting |
-
-### 📣 Marketing
-| Skill | Use when |
-|-------|----------|
-| `growth-hacker` | User acquisition, growth loops, experiments |
-| `content-creator` | Content strategy, copywriting, editorial calendar |
-| `seo-specialist` | Technical SEO, content optimization, link building |
-| `social-strategist` | LinkedIn, Twitter cross-platform strategy |
-| `reddit-builder` | Reddit community, authentic engagement |
-| `twitter-engager` | Twitter/X real-time strategy |
-| `instagram-curator` | Visual content, stories, reels |
-| `podcast-strategist` | Podcast content and distribution |
-| `app-store-optimizer` | ASO, conversion in app stores |
-| `linkedin-creator` | B2B thought leadership |
-| `tiktok-strategist` | Short video, viral content |
-
-### 💰 Paid Media
-| Skill | Use when |
-|-------|----------|
-| `paid-media-auditor` | Full account audit |
-| `ppc-strategist` | Campaign architecture, bidding |
-| `ad-creative` | Ad copy, RSAs, extensions |
-| `paid-social` | Meta, LinkedIn, TikTok ads |
-| `search-query-analyst` | Negative keywords, query intent |
 | `tracking-specialist` | Conversion tracking, attribution |
 
 ### 📦 Product
