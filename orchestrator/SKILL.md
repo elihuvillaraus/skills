@@ -42,6 +42,7 @@ Every agent in every phase operates under these laws. **Orchestrator enforces al
 | 10 | **codebase-memory first** — use MCP graph queries before reading files | 120× fewer tokens; grep only as fallback |
 | 11 | **Día del Juicio for high stakes** — run dual judges before: PRD→implementation, design→code, any wave deploy | Skip only for trivial single-file changes |
 | 12 | **Log skill usage** — every skill invocation logged to `~/.agents/skill-usage.log` | `echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)\|skill\|project\|reason" >> ~/.agents/skill-usage.log` |
+| 13 | **Mocks Don't Prove Persistence** — a data-writing story needs a real-DB test (ralph) *and* a reload/query check (evaluator); a green suite of DB-mocked tests is not evidence of Law #3 | If evaluator approved a data-writing story without a Step 3b persistence check → reject the approval, re-run evaluator |
 
 ---
 
@@ -135,6 +136,7 @@ For each Priority group (sequential between groups, parallel within):
    a. Ralph writes failing tests from spec FIRST
    b. Then writes minimum code to pass them
    c. git diff must show test files before signaling
+   d. [Law #13 check] If the story creates/updates/deletes data: at least one test must hit a real test DB and read the value back — not just a mocked client
 
 4. Ralph → RALPH_READY_FOR_EVAL (includes migrations + feature_flags fields)
 
@@ -142,6 +144,7 @@ For each Priority group (sequential between groups, parallel within):
    Empty = REJECT. No evaluator until test files exist.
 
 6. Launch @evaluator → EVALUATOR_APPROVED or EVALUATOR_REJECTED
+   [Law #13 check] For data-writing stories, EVALUATOR_APPROVED must include the Step 3b persistence check (reload/query) — a report with only screenshots/console evidence for a data-writing story is incomplete, treat as REJECTED and re-run.
    Max 3 iterations. Escalate after 3.
 
 7. If approved → @guardian-angel → if GGA_APPROVED → Phase 4

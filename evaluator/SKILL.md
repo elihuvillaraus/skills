@@ -110,6 +110,20 @@ playwright-cli network  # Check for failed requests
 
 ---
 
+### Step 3b — Persistence Reality Check (REQUIRED whenever the story creates, updates, or deletes data)
+
+The UI showing "Saved" is not proof anything was saved — it is proof the button was wired to a handler. Distrust it by default.
+
+1. **Reload, don't trust local/optimistic state.** After the happy-path create/update/delete action passes, force a **full page reload** (`playwright-cli goto` the same URL — not back/forward, which can serve from cache or client state) and re-check that the change is still there. If it's gone: `REJECTED — functional`, evidence "data not present after reload — client-only state or a failed write", regardless of how clean the UI looked before the reload.
+2. **Query the real store when you can reach it.** If this project gives you a way to check directly (DB credentials, an admin/debug endpoint, a CLI like `psql`/`sqlite3`/the project's DB tool), look up the record you just created/changed and confirm it exists with the expected values. This is the only reliable way to catch a **silent** server-side failure — a caught exception, a policy/permission layer rejecting the write, an error swallowed by a generic `catch` — because these commonly produce a normal-looking UI and zero console errors.
+3. **A clean console is not evidence of a successful write.** Do not let "Console Clean" (criterion 4) substitute for the reload/query check above — they catch different failure classes, and the most damaging persistence bugs are exactly the ones that leave no console trace.
+
+A story that creates, updates, or deletes data cannot score `functional: PASS` without this check, independent of how many of ralph's own tests passed — ralph's tests can be entirely mocked and still all pass while this check catches a real failure.
+
+**Condition-matrix check:** if the story is sensitive to an environment variant — theme (light/dark), locale, tenant/role, print/export output, viewport — verify it under every variant that's actually relevant to the story, not only the default. A bug that was found and "fixed" under one condition and never re-checked under the others (e.g. a light-mode-only regression test after a light-mode bug) is not fixed, it's narrowed.
+
+---
+
 ### Step 4 — Visual Audit
 
 Take full-page screenshots of all affected routes:
@@ -131,7 +145,7 @@ Score against 4 criteria (PASS/FAIL each):
 
 | Criterion | Question |
 |-----------|----------|
-| **Functional** | Does the feature work end-to-end as specified? |
+| **Functional** | Does the feature work end-to-end as specified? For data-writing stories, this includes the Step 3b persistence check — passing every other check with unverified persistence is still FAIL. |
 | **Visual** | Does it look correct with no layout breaks? |
 | **Resilience** | Does it handle edge cases and error states gracefully? |
 | **Console Clean** | Zero new errors in browser console? |
@@ -210,3 +224,4 @@ EVALUATOR_ESCALATE: {
 3. **Console check runs after every navigation** — not just once at the end.
 4. **NEVER approve if console has new errors** — even if the feature looks functional.
 5. **Your job is to reject things** — the human will praise ralph; you won't.
+6. **NEVER approve a data-writing story on UI success alone** — Step 3b's reload/query check is required, and a clean console does not substitute for it. A green test suite that mocks its own DB is not evidence either — you verify against the running app and its real store, not ralph's claims about test results.

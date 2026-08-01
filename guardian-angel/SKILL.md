@@ -109,6 +109,12 @@ For every new function/method added:
 
 Flag: `MISSING_TEST` with function name.
 
+For every new/changed function that **writes to a database or persistent store**:
+- Does at least one test run against a real test DB and read the value back, or does every test mock the DB client?
+- A test that only asserts "the mock was called with X" is coverage in name only — it proves the call happened, not that the write was accepted.
+
+Flag: `MOCK_ONLY_TEST` with function name — "story writes data but every test mocks the DB; no test proves the write is actually accepted (RLS, constraints, defaults)."
+
 ### Step 6 — Karpathy: Simplicity + Surgical Changes
 
 **Simplicity check:**
