@@ -43,6 +43,10 @@ Every agent in every phase operates under these laws. **Orchestrator enforces al
 | 11 | **Día del Juicio for high stakes** — run dual judges before: PRD→implementation, design→code, any wave deploy | Skip only for trivial single-file changes |
 | 12 | **Log skill usage** — every skill invocation logged to `~/.agents/skill-usage.log` | `echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)\|skill\|project\|reason" >> ~/.agents/skill-usage.log` |
 | 13 | **Mocks Don't Prove Persistence** — a data-writing story needs a real-DB test (ralph) *and* a reload/query check (evaluator); a green suite of DB-mocked tests is not evidence of Law #3 | If evaluator approved a data-writing story without a Step 3b persistence check → reject the approval, re-run evaluator |
+| 14 | **Executive Mode Always** — every subagent prompt appends the directive below; chat/reports terse, PRDs/specs/commits stay full prose | Report reads as paragraphs, not facts = trim before accepting |
+
+**Law 14 directive — append verbatim to every subagent launch prompt (researcher, architect, spec-writer, ralph, evaluator, guardian-angel, tester, documenter):**
+> Operate in executive mode: caveman-terse chat and reports (no filler, no preamble, no decorative tables/emoji, facts only — skill `caveman`) and ponytail-minimal code (YAGNI ladder, smallest correct diff, ≤3-line explanation after code — skill `ponytail`). Exception: PRDs, specs, commit messages, and any persisted doc stay full normal prose — compress the talk, not the artifact.
 
 ---
 
