@@ -18,6 +18,8 @@ Use **only** for high-stakes validation — not for every task. This skill costs
 
 Do NOT use for: routine code review, single-file changes, trivial decisions.
 
+For design/visual/copy artifacts, add Judge C (see below) so the ruling checks not just internal correctness but whether the work actually holds up against something real.
+
 ---
 
 ## Execution
@@ -101,9 +103,30 @@ Output your findings as a structured list. Be specific — cite line numbers or 
 Signal completion with: JUDGE_B_DONE
 ```
 
-### Phase 3 — Wait for both judges
+**Judge C — Comparative (optional — only when a real external bar exists)**
 
-Wait for both `JUDGE_A_DONE` and `JUDGE_B_DONE` signals. Do not proceed until both are received.
+Add Judge C whenever the artifact is a design, a UI build, marketing copy, or anything else a real competing artifact could be screenshotted or read alongside — a PRD, migration, or backend-only diff has no meaningful bar and skips this judge. Uses the `gauntlet-loop` skill's bar criteria: the reference must be **named** (a specific product/piece, not a category), **fetchable** (the judge can actually get it — screenshot the live page, read the published piece), and **comparable** (fits side by side). If the user already named a reference (e.g. cinematic-marcus's "reference sites they admire" from Phase 1), use it; otherwise propose 2-3 named candidates and ask before judging.
+
+Prompt template:
+```
+You are Judge C. Compare the following artifact against a specific named reference, blind.
+Fetch the reference yourself (screenshot the live page / read the piece) — never judge
+against a description of it.
+
+Reference: [NAMED, FETCHABLE BAR]
+Artifact: [FULL ARTIFACT OR SCREENSHOT]
+
+Put them side by side with labels stripped. Say which one wins and name the single
+biggest gap. Be harsh — praise is not useful. This is comparative only: do not
+re-check correctness or risk, Judges A and B already cover that.
+
+Verdict: WINS | LOSES | TIE, plus the one biggest gap if not WINS.
+Signal completion with: JUDGE_C_DONE
+```
+
+### Phase 3 — Wait for all launched judges
+
+Wait for `JUDGE_A_DONE` and `JUDGE_B_DONE` (and `JUDGE_C_DONE` if launched). Do not proceed until all are received.
 
 ### Phase 4 — Reconcile
 
@@ -116,7 +139,8 @@ As the Judgment Coordinator, reconcile the two verdicts:
    - WARNING from one judge → **evaluate: is it actionable? If yes, fix. If opinion-based, discard.**
    - INFO → **log to memory.md for future reference, do not block**
 3. **Discard noise**: Reject findings that are style preferences, nitpicks, or opinions without concrete consequences.
-4. **Produce the ruling**.
+4. **Judge C (if launched)**: `WINS` → note and move on. `TIE` → treat as WARNING (recommended fix, not blocking). `LOSES` → treat as WARNING by default; escalate to CRITICAL only when the task explicitly demands beating that reference. A LOSES verdict is a real gap, not a bug — the right fix is usually running a full `gauntlet-loop` (multi-round builder/critic) on the losing piece, not a single patch.
+5. **Produce the ruling**.
 
 ### Phase 5 — Output the ruling
 
@@ -124,7 +148,7 @@ As the Judgment Coordinator, reconcile the two verdicts:
 # ⚖️ Judgment Ruling
 
 **Artifact**: [name/path]
-**Judges**: A (Correctness) + B (Risk)
+**Judges**: A (Correctness) + B (Risk)[ + C (Comparative vs [BAR]) if launched]
 **Verdict**: ✅ APPROVED | ⚠️ APPROVED WITH REQUIRED FIXES | ❌ REJECTED
 
 ---
@@ -143,6 +167,9 @@ As the Judgment Coordinator, reconcile the two verdicts:
 | # | Finding | Severity | Disposition |
 |---|---------|----------|-------------|
 | 1 | ... | ... | Fix / Discard |
+
+## Judge C — Comparative (if launched)
+**Bar**: [named reference] · **Verdict**: WINS / LOSES / TIE · **Biggest gap**: [one line, or "none"]
 
 ## Ruling
 - **Must fix before proceeding**: [list or "none"]

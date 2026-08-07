@@ -330,6 +330,14 @@ useEffect(() => {
 
 ---
 
+## Phase 3.5: Gauntlet Pass (optional, recommended when a reference site exists)
+
+If Phase 1 collected a "reference site they admire" (or the user names one now), run it against the `gauntlet-loop` skill instead of eyeballing the result yourself: screenshot the built site and the reference at the same viewport, fan out a builder + a separate fresh-context critic per weak section, compare blind, and loop on that section until the critic picks ours. This catches "looks fine in isolation, loses next to the actual bar" — the gap a solo self-review misses.
+
+Skip this phase if no reference site was named — inventing a bar defeats the point (see gauntlet-loop's own "vague bar" failure mode).
+
+---
+
 ## Phase 4: Polish and Deploy
 
 ### Polish Checklist
@@ -361,6 +369,7 @@ pnpm build && npx vercel --yes --prod
 | Phase 1 | Show brand card. Confirm colors/copy. |
 | Phase 2 | Show cost estimate. Confirm before generating. Show image/video. Wait for approval. |
 | Phase 3 | Open in browser for review. |
+| Phase 3.5 | Show gauntlet-loop verdict (WINS/LOSES + gap) if a reference site was named. |
 | Phase 4 | Final review before deploy. |
 
 ---
