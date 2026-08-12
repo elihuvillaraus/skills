@@ -5,6 +5,7 @@
 **Author**: Architect Agent
 **Date**: YYYY-MM-DD
 **Description**: One-line summary of what this PRD delivers.
+**Rigor Tier**: Prototype | Alpha | Beta | GA — see `orchestrator` Law 16. Default GA if unset.
 
 ## Tech Stack
 
@@ -25,6 +26,15 @@ pnpm lint
 ## Context
 
 Brief technical context. Reference existing files, patterns, or architecture the developer needs to understand. Include links to source-of-truth files.
+
+## Assumed Decisions
+
+<!-- Empty at PRD creation. Ralph appends here if it built past a missing load-bearing
+decision instead of blocking (see orchestrator Law 15). Each entry stays until architect
+ratifies it — confirms and folds the reasoning into the story above, or corrects it and
+flags the story for rebuild. An open entry does not block shipping the story. -->
+
+None yet.
 
 ## User Stories
 

@@ -144,6 +144,7 @@ This uses 120× fewer tokens than file-by-file exploration.
 - `context/pipeline.md` — Full Pipeline Laws + TDD/SDD/Engram/Karpathy
 - `context/tech-stack.md` — Stack, dependencies, conventions
 - `memory.md` — Learned preferences (AI-maintained, grows over time)
+- Nested `AGENTS.md` may exist inside subfolders (monorepo areas with local rules) — read the nearest one when working in that folder; it adds to this file, never replaces it.
 ```
 
 ---
@@ -354,6 +355,28 @@ pnpm test:e2e  # E2E with playwright-cli
 ## Corrections Log
 <!-- Last 10 corrections made during sessions -->
 ```
+
+---
+
+## Phase 3b — Nested AGENTS.md (monorepo / large codebases only)
+
+Root `AGENTS.md` covers rules that apply everywhere. A folder with its own distinct rules (a `src/payments/` with PCI constraints, a `packages/mobile-app/` with its own commands) gets its own **nested** `AGENTS.md` for rules that apply only inside it — never a duplicate of the root file.
+
+Detect the need: `pnpm-workspace.yaml`, `turbo.json`, `nx.json`, or a `packages/*`/`apps/*` layout → this is a monorepo, ask whether any workspace needs its own rules (different package manager scope, different deploy target, area-specific constraints like auth or payments). Don't create one preemptively for every folder — only where local rules genuinely diverge from root.
+
+```markdown
+# AGENTS.md — <area name>
+
+> Scope: this folder only. Root AGENTS.md still applies — this file adds to it, never repeats it.
+
+## Local commands
+<!-- only if different from root, e.g. this workspace's own test/build command -->
+
+## Local rules
+<!-- only rules specific to this area — e.g. "never log request bodies here (PCI)" -->
+```
+
+Every skill that touches a file reads the **nearest** `AGENTS.md` walking up from that file — root rules plus whatever local file exists for that area. `sync`-style drift checks (currently informal, via `guardian-angel`'s convention checks) should flag a nested file that's drifted from root, same as the root file itself.
 
 ---
 

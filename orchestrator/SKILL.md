@@ -44,6 +44,8 @@ Every agent in every phase operates under these laws. **Orchestrator enforces al
 | 12 | **Log skill usage** — every skill invocation logged to `~/.agents/skill-usage.log` | `echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)\|skill\|project\|reason" >> ~/.agents/skill-usage.log` |
 | 13 | **Mocks Don't Prove Persistence** — a data-writing story needs a real-DB test (ralph) *and* a reload/query check (evaluator); a green suite of DB-mocked tests is not evidence of Law #3 | If evaluator approved a data-writing story without a Step 3b persistence check → reject the approval, re-run evaluator |
 | 14 | **Executive Mode Always** — every subagent prompt appends the directive below; chat/reports terse, PRDs/specs/commits stay full prose | Report reads as paragraphs, not facts = trim before accepting |
+| 15 | **Assumed Decisions Owe Ratification** — ralph may build past a missing load-bearing decision only by recording it in the PRD's `## Assumed Decisions`, never by silently guessing | Open entries at Phase 6 → note in final report, run `architect ratify` before calling the feature settled |
+| 16 | **Rigor Tiers Right-Size the Gates** — PRD's **Rigor Tier** (Prototype/Alpha/Beta/GA) decides which of evaluator/guardian-angel/tester/dia-del-juicio run; unset = GA | Phase 3/5 skipping a gate with no tier declared = bug, default to GA |
 
 **Law 14 directive — append verbatim to every subagent launch prompt (researcher, architect, spec-writer, ralph, evaluator, guardian-angel, tester, documenter):**
 > Operate in executive mode: caveman-terse chat and reports (no filler, no preamble, no decorative tables/emoji, facts only — skill `caveman`) and ponytail-minimal code (YAGNI ladder, smallest correct diff, ≤3-line explanation after code — skill `ponytail`). Exception: PRDs, specs, commit messages, and any persisted doc stay full normal prose — compress the talk, not the artifact.
@@ -131,6 +133,9 @@ Wait for all `SPEC_DONE` before launching ralph.
 For each Priority group (sequential between groups, parallel within):
 
 ```
+0. [Law #16] Read the PRD header's Rigor Tier once per group. Unset → GA. This decides which
+   of steps 6-7 below actually run for this group's stories.
+
 1. Launch one @ralph per story (parallel within group)
    Each ralph: "Implement USxxx from [PRD] using spec at [spec path]"
 
@@ -142,16 +147,19 @@ For each Priority group (sequential between groups, parallel within):
    c. git diff must show test files before signaling
    d. [Law #13 check] If the story creates/updates/deletes data: at least one test must hit a real test DB and read the value back — not just a mocked client
 
-4. Ralph → RALPH_READY_FOR_EVAL (includes migrations + feature_flags fields)
+4. Ralph → RALPH_READY_FOR_EVAL (includes migrations, feature_flags, assumed_decisions fields)
+   [Law #15] If assumed_decisions is not "none" → note it, do not block. Queue `architect ratify` before the feature is called settled.
 
 5. [Law #3 gate] git diff --name-only HEAD | grep -E "(\.test\.|\.spec\.)"
-   Empty = REJECT. No evaluator until test files exist.
+   Empty = REJECT. No evaluator until test files exist. This gate runs at every tier — Quality Gates and TDD are never optional, only the gates below are.
 
-6. Launch @evaluator → EVALUATOR_APPROVED or EVALUATOR_REJECTED
+6. Tier ≥ Alpha → Launch @evaluator → EVALUATOR_APPROVED or EVALUATOR_REJECTED
    [Law #13 check] For data-writing stories, EVALUATOR_APPROVED must include the Step 3b persistence check (reload/query) — a report with only screenshots/console evidence for a data-writing story is incomplete, treat as REJECTED and re-run.
    Max 3 iterations. Escalate after 3.
+   Tier = Prototype → skip; ralph self-certifies once its own Quality Gates (step 5) pass, proceed straight to Phase 4.
 
-7. If approved → @guardian-angel → if GGA_APPROVED → Phase 4
+7. Tier = GA → @guardian-angel → if GGA_APPROVED → Phase 4
+   Tier = Alpha/Beta → skip guardian-angel, evaluator's approval is enough → Phase 4
 ```
 
 ---
@@ -164,7 +172,7 @@ For each Priority group (sequential between groups, parallel within):
 
 ### Phase 5 — Testing (E2E, parallel with Phase 3-4)
 
-`@tester` with PRD path + all modified files.
+[Law #16] Tier ≥ Beta only — Prototype and Alpha stop at Phase 4, no separate E2E suite. `@tester` with PRD path + all modified files.
 
 [Law #5 gate]: TESTER_REPORT must contain:
 - `smoke.passed` or `smoke.failed` (not N/A)
@@ -186,7 +194,7 @@ Before approving deploy:
 
 ### Phase 6 — Final Report
 
-Close GitHub issue. Output structured completion report with: summary, artifacts, test results, what's next, blocked items.
+Close GitHub issue. Output structured completion report with: summary, artifacts, test results, what's next, blocked items, and [Law #15] any PRD with open `## Assumed Decisions` entries — list them, they don't block this report but they owe a future `architect ratify` pass.
 
 Save session to Engram:
 ```bash
@@ -204,6 +212,7 @@ engram save "Session $(date +%Y-%m-%d): <feature>" "<what built, decisions, bloc
 | Write the implementation plan (PRD) | `/architect` |
 | Implement one story | `/ralph` |
 | Run all tests + E2E | `/tester` |
+| Fix a real bug (root cause, not symptom) | `/debug` — standalone, no PRD needed |
 | Commit + document | `/documenter` |
 | Code review | `/code-reviewer` |
 | Check skill usage stats | `/skill-tracking` |
