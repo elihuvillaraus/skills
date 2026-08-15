@@ -18,9 +18,17 @@ The real win of cross-vendor is catching **correlated blind spots** — things e
 
 ---
 
+## Spawning agents — a compatibility note (read before Stage 1)
+
+**Never pass a `name` to the Stage 1/2 Agent calls.** Some environments run with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` enabled — a named spawn there becomes a persistent background "teammate" task that does not return its result the normal way. It sends `idle_notification` pings instead, and explicit `SendMessage` requests for the final answer are not reliable. You end up burning tokens on `ListAgents`/`SendMessage`/`TaskStop` cleanup instead of getting an answer, and can stall indefinitely. An **unnamed** spawn stays a one-shot call that returns its result directly through the normal completion channel, regardless of that setting — so just omit `name` for every council member and reviewer.
+
+**Fallback if a member still doesn't return.** Give a spawn a couple of reasonable check-ins. If it still hasn't produced a real answer, stop waiting on it — reason that member's lens yourself inline (you already have the question and, in Stage 2, every other answer for context) rather than leaving the council blocked. Note in the final output which members were genuinely spawned vs. reasoned inline.
+
+---
+
 ## Stage 1 — Independent answers (5 members, in parallel)
 
-Spawn **all five Agent calls in a single message** (one block, five tool calls) so they run concurrently. Each is a `general-purpose` agent on **`opus`** — every seat gets the smartest model. Give each the **same question** plus its lens. Members never see each other.
+Spawn **all five Agent calls in a single message** (one block, five tool calls, no `name` param — see compatibility note above) so they run concurrently. Each is a `general-purpose` agent on **`opus`** — every seat gets the smartest model. Give each the **same question** plus its lens. Members never see each other.
 
 | Member | model | Lens (what it's told to prioritize) |
 |---|---|---|
@@ -52,7 +60,7 @@ Collect the five answers verbatim.
 
 Label the five Stage-1 answers `Response A`, `Response B`, … `Response E` and **strip all identity** (no lens names, no model names). Keep your own private map of label → member for the notes later.
 
-Spawn **five reviewer Agent calls in one message**, all on **`opus`** (judging answer quality is harder than producing it — never cheap out on the judges). Each reviewer sees **all five anonymized answers**. (Reviewers are fresh stateless spawns — none can recognize "its own" answer, so there's no self-preference bias.)
+Spawn **five reviewer Agent calls in one message**, all on **`opus`**, no `name` param (see compatibility note above) — judging answer quality is harder than producing it, never cheap out on the judges. Each reviewer sees **all five anonymized answers**. (Reviewers are fresh stateless spawns — none can recognize "its own" answer, so there's no self-preference bias.)
 
 Reviewer prompt template:
 
