@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{EPIC_NAME}} · Panel</title>
+<style>
+:root{
+  --bg:#0a0a0c;--panel:#0f0f13;--panel2:#141418;--panel3:#1a1a1f;--border:#212227;--border2:#2c2d34;
+  --text:#eeeef1;--dim:#9c9ca6;--muted:#6b6c76;
+  --accent:#6672e5;--accent2:#8a7cf0;
+  --teal:#3fd694;--amber:#e0b23e;--rose:#e5484d;--slate:#7b8296;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scrollbar-color:var(--border2) transparent;scrollbar-width:thin}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--slate)}
+::selection{background:var(--accent);color:#fff}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;padding:28px clamp(16px,3vw,44px) 80px;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+h1{font-size:20px;font-weight:700;letter-spacing:-.015em}
+.sub{color:var(--dim);font-size:12.5px;margin-top:5px}
+.sub b{color:var(--text);font-weight:600}
+.sub .mono{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.tnum{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent2);outline-offset:2px;border-radius:4px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:28px;flex-wrap:wrap;margin-bottom:16px}
+.headmeta{max-width:56ch}
+.stat{text-align:right;min-width:200px}
+.stat .pct{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-.02em}
+.stat .pct .u{font-size:13px;color:var(--dim);font-weight:500;margin-left:1px}
+.segbar{height:6px;border-radius:4px;background:var(--panel3);border:1px solid var(--border);overflow:hidden;display:flex;margin:8px 0 6px;min-width:200px}
+.segbar .seg{height:100%}
+.segbar .seg.done{background:var(--teal)}
+.segbar .seg.doing{background:var(--amber)}
+.stat .subline{font-size:11.5px;color:var(--dim);font-family:var(--mono)}
+.stat .subline b{color:var(--text);font-weight:600}
+.chiprow{display:flex;flex-wrap:wrap;gap:7px;margin:18px 0 28px}
+.mchip{font-size:11px;font-family:var(--mono);padding:4px 9px;border-radius:6px;background:var(--panel);color:var(--dim);border:1px solid var(--border)}
+.mchip b{color:var(--text);font-weight:700}
+.mchip.warn{color:var(--rose);border-color:rgba(229,72,77,.3);background:rgba(229,72,77,.08)}
+.mchip.warn b{color:var(--rose)}
+h2.sec{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 4px;font-weight:700}
+h2.sec .hint{text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400;font-size:11.5px;margin-left:6px}
+.waves{margin-bottom:6px}
+.wave-group{padding:18px 0 22px;border-top:1px solid var(--border)}
+.wave-group:first-child{border-top:none;padding-top:6px}
+.wave-group.locked .wave-title,.wave-group.locked .wave-goal{opacity:.75}
+.wave-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:13px}
+.wave-idx{font-family:var(--mono);font-size:10.5px;font-weight:700;color:#fff;background:var(--accent);padding:3px 8px;border-radius:6px;letter-spacing:.03em;flex:none;margin-top:1px}
+.wave-heading{flex:1;min-width:0}
+.wave-titlerow{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.wave-title{font-weight:700;font-size:14.5px;letter-spacing:-.01em}
+.wave-dep{font-size:11.5px;color:var(--muted)}
+.wave-goal{color:var(--dim);font-size:12px;margin-top:2px}
+.wave-badge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:100px;border:1px solid var(--border2);color:var(--dim);white-space:nowrap;flex:none}
+.wave-badge.active{color:var(--amber);border-color:rgba(224,178,62,.4);background:rgba(224,178,62,.09)}
+.wave-badge.done{color:var(--teal);border-color:rgba(63,214,148,.35);background:rgba(63,214,148,.09)}
+.wave-badge.locked{color:var(--muted)}
+.wave-prds{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px}
+.prd{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;transition:border-color .16s,background-color .16s}
+.prd:hover{border-color:var(--border2);background:var(--panel2)}
+.prd.sel{border-color:var(--accent2);background:var(--panel2)}
+.prd .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.prd .id{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;padding:2px 8px 2px 6px;border-radius:100px;letter-spacing:.01em;white-space:nowrap;background:var(--panel3)}
+.pill.done{color:var(--teal)}
+.pill.doing{color:var(--amber)}
+.pill.todo{color:var(--dim)}
+.pill.planned{color:var(--accent2)}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;box-sizing:border-box}
+.sdot.todo{border:1.4px solid currentColor;opacity:.7}
+.sdot.doing{background:conic-gradient(currentColor 0deg 180deg,transparent 180deg 360deg);border:1.4px solid currentColor}
+.sdot.done{background:currentColor}
+.prd .nm{font-weight:600;font-size:13.5px;margin:7px 0 2px;letter-spacing:-.005em}
+.prd .scope{font-size:11.5px;color:var(--muted);line-height:1.45;min-height:31px}
+.prd .bar{height:5px;border-radius:4px;background:var(--panel3);margin-top:11px;overflow:hidden}
+.prd .fill{height:100%;background:var(--accent);border-radius:4px;transition:width .5s cubic-bezier(.16,1,.3,1);width:0}
+.prd .fill.zero{background:var(--border2)}
+.prd .st{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);margin-top:6px}
+.prd .st b{color:var(--text);font-weight:700}
+.prd .meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:600;padding:3px 6px;border-radius:5px;background:var(--panel3);color:var(--dim);white-space:nowrap}
+.chip svg{flex:none}
+.chip.dep{color:var(--slate)}
+.chip.mig{color:var(--accent2)}
+.chip.gated{color:var(--rose);background:rgba(229,72,77,.09)}
+.chip.inter{color:var(--amber);background:rgba(224,178,62,.09)}
+.grid2{display:grid;grid-template-columns:1fr;gap:24px;margin-top:8px}
+@media(min-width:1080px){.grid2{grid-template-columns:1.15fr .85fr}}
+.blockers,.deltas{display:flex;flex-direction:column;gap:8px}
+.blk{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 13px;display:flex;gap:10px}
+.blk .dot{width:8px;height:8px;border-radius:50%;background:var(--rose);flex:none;margin-top:5px}
+.blk.warn .dot{background:var(--amber)}
+.blk.low .dot{background:var(--slate)}
+.blk .body{flex:1;min-width:0}
+.blk .bt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.blk .code{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--rose)}
+.blk.warn .code{color:var(--amber)}.blk.low .code{color:var(--slate)}
+.blk .sev{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+.blk .title{font-size:12.5px;font-weight:600;margin:3px 0}
+.blk .needs{font-size:11px;color:var(--dim)}
+.blk .needs b{color:var(--text)}
+.delta{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 13px;font-size:11.5px;color:var(--dim);line-height:1.5}
+.delta b{color:var(--text)}
+.delta .was{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--rose)}
+.delta .now{color:var(--teal)}
+.empty{border:1px dashed var(--border2);border-radius:10px;padding:14px 13px;color:var(--muted);font-size:11.5px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 12px}
+.controls input,.controls select{background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 11px;font-family:var(--font);font-size:12.5px}
+.controls input{flex:1;min-width:170px}
+.controls input::placeholder{color:var(--muted)}
+.spacer{flex:1}
+.btn{background:var(--panel);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s}
+.btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.1);color:#fff;border-color:var(--accent)}
+.tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px}
+thead th{position:relative;text-align:left;padding:9px 10px;border-bottom:1px solid var(--border2);color:var(--muted);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;white-space:nowrap;user-select:none;cursor:pointer;background:var(--panel)}
+thead th:hover{color:var(--text)}
+thead th.sorted{color:var(--accent2)}
+thead th.sorted::after{content:'';display:inline-block;width:0;height:0;margin-left:5px;border-left:3px solid transparent;border-right:3px solid transparent}
+thead th.sorted.asc::after{border-bottom:4px solid currentColor}
+thead th.sorted.desc::after{border-top:4px solid currentColor}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel)}
+.usid{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--dim)}
+.prdcell{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.wv{font-size:9.5px;font-weight:700;background:var(--panel3);color:var(--dim);padding:2px 7px;border-radius:5px}
+.pri{display:inline-flex;align-items:center;gap:5px}
+.pribars{display:inline-flex;align-items:flex-end;gap:1.5px;height:9px;color:var(--border2)}
+.pribars span{width:2.5px;border-radius:1px;background:currentColor}
+.pribars span:nth-child(1){height:35%}
+.pribars span:nth-child(2){height:65%}
+.pribars span:nth-child(3){height:100%}
+.pribars.n1{color:var(--border2)}.pribars.n1 span:nth-child(1){color:inherit}
+.pri.P1 .pribars{color:var(--rose)}
+.pri.P2 .pribars span:nth-child(1),.pri.P2 .pribars span:nth-child(2){color:var(--amber)}
+.pri.P2 .pribars span:nth-child(3){color:var(--border2)}
+.pri.P3 .pribars span:nth-child(1){color:var(--accent2)}
+.pri.P3 .pribars span:nth-child(2),.pri.P3 .pribars span:nth-child(3){color:var(--border2)}
+.pri.P4 .pribars span,.pri.none .pribars span{color:var(--border2)}
+.pri .pl{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.tag2{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:rgba(102,114,229,.14);color:var(--accent2);white-space:nowrap}
+.stbtn{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px;border:1px solid var(--border2);cursor:pointer;white-space:nowrap;background:transparent;color:var(--dim);transition:border-color .15s,background-color .15s}
+.stbtn.doing{color:var(--amber);border-color:rgba(224,178,62,.4)}
+.stbtn.done{color:var(--teal);border-color:rgba(63,214,148,.4)}
+.stbtn:hover{background:var(--panel3)}
+.count{color:var(--muted);font-size:12px;font-family:var(--mono);margin-left:6px;text-transform:none;letter-spacing:0}
+.legend{font-size:11px;color:var(--muted);margin-top:16px;line-height:2}
+.legend b{color:var(--dim)}
+.legend span{display:inline-flex;align-items:center;gap:5px;margin-right:14px}
+.savednote{font-size:11px;color:var(--muted);margin-top:10px}
+.savednote b{color:var(--amber);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <div class="headmeta">
+    <h1 id="hTitle"></h1>
+    <div class="sub">EPIC <b id="hCode"></b> · <span class="mono" id="hMeta"></span></div>
+    <div class="sub" style="margin-top:2px" id="hNote"></div>
+  </div>
+  <div class="stat">
+    <div class="pct tnum"><span id="ringPct">0%</span></div>
+    <div class="segbar"><div class="seg done" id="segDone"></div><div class="seg doing" id="segDoing"></div></div>
+    <div class="subline tnum" id="statSub"></div>
+  </div>
+</header>
+<div class="chiprow" id="metaChips"></div>
+<h2 class="sec" id="wavesTitle"></h2>
+<div class="waves" id="waves"></div>
+<div class="grid2">
+  <div>
+    <h2 class="sec">Notas de reconciliación <span class="hint">(qué cambió del plan original)</span></h2>
+    <div class="deltas" id="deltas"></div>
+  </div>
+  <div>
+    <h2 class="sec">Bloqueos y decisiones pendientes</h2>
+    <div class="blockers" id="blockers"></div>
+  </div>
+</div>
+<h2 class="sec" style="margin-top:28px" id="tableTitle"></h2>
+<div class="controls">
+  <input id="search" placeholder="Buscar…">
+  <select id="fWave"></select>
+  <select id="fPrd"></select>
+  <select id="fSt"><option value="">Estado: todo</option><option value="todo">Pendiente</option><option value="doing">En curso</option><option value="done">Hecho</option></select>
+  <span class="spacer"></span>
+  <button class="btn" id="reset">Reiniciar mi estado</button>
+  <button class="btn primary" id="export">Exportar JSON</button>
+</div>
+<div class="tblwrap">
+<table>
+  <thead><tr id="theadRow"></tr></thead>
+  <tbody id="tbody"></tbody>
+</table>
+</div>
+<div class="savednote">El progreso se guarda solo en <b>localStorage</b> de este navegador. Para que sea la fuente de verdad del equipo, exporta el JSON y refléjalo en el origen — o regenera este panel con la skill <b>epic-panel</b>.</div>
+<div class="legend" id="legend"></div>
+
+<script>
+/* =====================================================================
+   DATOS DEL EPIC — REEMPLAZA TODO ESTE OBJETO AL GENERAR EL PANEL.
+   Esquema:
+   meta   : {name, code, branch, commit, generatedAt,
+             terms: {group,groupPl, item,itemPl, unit,unitPl}  (opcional — ver abajo)}
+            `terms` renombra el vocabulario para proyectos no-dev. Defaults:
+            group="Ola"/groupPl="Olas" (fase/sprint/milestone),
+            item="PRD"/itemPl="PRDs" (workstream/iniciativa/proyecto),
+            unit="historia"/unitPl="historias" (tarea/entregable).
+            Ejemplo para una campaña: {group:"Fase",groupPl:"Fases",item:"Workstream",itemPl:"Workstreams",unit:"tarea",unitPl:"tareas"}
+   waves[]: {id:"W1", title:"Ola 1 · Nombre", goal:"...", prds:["PRD-01",...]}
+            El orden del array = orden de las olas. Cada ola "depende de" la previa.
+   prds{} : clave = id del item. Valor:
+            {title, wave:"W1", depends:["PRD-01"], owns:"mig 0003" | "—",
+             scope:"1-2 frases",
+             gated:"F17"      (opcional: chip rojo, arranque bloqueado),
+             interleave:"PRD-05" (opcional: chip ámbar, acoplado a nivel historia),
+             planned:true     (opcional: item futuro sin historias todavía),
+             stories:[ {id:"US001", t:"título", p:"P1"|"P2"|"P3"|"P4"|null,
+                        s:"done"|"doing"|"todo", tag:"re-scope"|null } ] }
+            El % y los conteos se derivan de stories[].s (peso igual por historia).
+   deltas[]: {was:"...", now:"...", ref:"fuente"}   (opcional; [] para ocultar)
+   blockers[]: {code, sev:"alta|media|baja", cls:""|"warn"|"low", title, needs}
+   ===================================================================== */
+const EPIC = {
+  meta:{ name:"{{EPIC_NAME}}", code:"{{EPIC_CODE}}", branch:"main", commit:"0000000", generatedAt:"YYYY-MM-DD",
+    terms:{ group:"Ola", groupPl:"Olas", item:"PRD", itemPl:"PRDs", unit:"historia", unitPl:"historias" } },
+  waves:[
+    {id:"W1", title:"Ola 1 · Cimientos", goal:"Descripción corta del objetivo de la ola", prds:["PRD-01"]},
+    {id:"W2", title:"Ola 2 · Núcleo", goal:"…", prds:["PRD-02","PRD-03"]},
+  ],
+  prds:{
+    "PRD-01":{title:"Ejemplo", wave:"W1", depends:[], owns:"mig 0000",
+      scope:"Una o dos frases del alcance del item.",
+      stories:[
+        {id:"US001",t:"Primera historia",p:"P1",s:"done"},
+        {id:"US002",t:"Segunda historia",p:"P2",s:"todo"},
+      ]},
+    "PRD-02":{title:"Otro", wave:"W2", depends:["PRD-01"], owns:"mig 0001", gated:"F17",
+      scope:"…",
+      stories:[ {id:"US001",t:"…",p:"P1",s:"todo",tag:"re-scope"} ]},
+    "PRD-03":{title:"Futuro", wave:"W2", depends:["PRD-01"], owns:"por definir", planned:true,
+      scope:"item planeado, sin historias definidas.", stories:[]},
+  },
+  deltas:[
+    {was:"Cómo era en el plan original", now:"Cómo quedó", ref:"referencia"},
+  ],
+  blockers:[
+    {code:"F17", sev:"alta", cls:"", title:"Título corto del bloqueo", needs:"Qué lo desbloquea y de quién."},
+  ],
+};
+
+/* ---------- iconos (SVG geométricos, trazo consistente) ---------- */
+const ICO = {
+  dep:'<svg width="10" height="10" viewBox="0 0 12 12"><path d="M9.5 6H2.5M6 2.5L2.5 6L6 9.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  inter:'<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 3.5h3.2L9 8.5h1M2 8.5h3.2L9 3.5h1" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  gated:'<svg width="10" height="10" viewBox="0 0 12 12"><path d="M6 1.8L10.6 9.8H1.4L6 1.8Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/><path d="M6 5v2M6 8.4h.01" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  owns:'<svg width="10" height="10" viewBox="0 0 12 12"><path d="M3 1.5v9M3 2h5.5l-1.3 2.3L8.5 6.5H3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>',
+};
+
+/* ---------- lógica (no requiere edición) ---------- */
+const T=Object.assign({group:"Ola",groupPl:"Olas",item:"PRD",itemPl:"PRDs",unit:"historia",unitPl:"historias"},EPIC.meta.terms||{});
+const LS='epic-'+EPIC.meta.code+'-v1';
+const $=s=>document.querySelector(s);
+const ORDER=['todo','doing','done'];
+const STLABEL={todo:'pendiente',doing:'en curso',done:'hecho'};
+let ROWS=[];
+Object.entries(EPIC.prds).forEach(([pid,prd])=>{ prd.stories.forEach(st=>ROWS.push({...st, prd:pid, wave:prd.wave, key:pid+'/'+st.id})); });
+const saved=JSON.parse(localStorage.getItem(LS)||'{}');
+ROWS.forEach(r=>{ if(saved[r.key]) r.s=saved[r.key]; });
+function persist(){ const m={}; ROWS.forEach(r=>m[r.key]=r.s); localStorage.setItem(LS,JSON.stringify(m)); }
+const prdStories=pid=>ROWS.filter(r=>r.prd===pid);
+const prdDone=pid=>prdStories(pid).filter(r=>r.s==='done').length;
+const prdStatus=pid=>{ const p=EPIC.prds[pid]; if(p.planned)return'planned';
+  const t=prdStories(pid), d=t.filter(r=>r.s==='done').length, g=t.filter(r=>r.s!=='todo').length;
+  if(t.length&&d===t.length)return'done'; if(g>0)return'doing'; return'todo'; };
+const sdot=s=>`<span class="sdot ${s}"></span>`;
+function rollups(){
+  const total=ROWS.length, done=ROWS.filter(r=>r.s==='done').length, doing=ROWS.filter(r=>r.s==='doing').length, todo=total-done-doing;
+  const pct=total?Math.round(done/total*100):0;
+  $('#ringPct').textContent=pct+'%';
+  $('#segDone').style.width=(total?done/total*100:0)+'%';
+  $('#segDoing').style.width=(total?doing/total*100:0)+'%';
+  $('#statSub').innerHTML=`<b>${done}</b>/${total} ${T.unitPl} · ${doing} en curso · ${todo} pend.`;
+  const defined=Object.keys(EPIC.prds).filter(p=>!EPIC.prds[p].planned);
+  const prdsDone=defined.filter(p=>prdStatus(p)==='done').length;
+  const wavesDone=EPIC.waves.filter(w=>w.prds.some(p=>EPIC.prds[p]&&!EPIC.prds[p].planned)&&w.prds.every(p=>!EPIC.prds[p]||EPIC.prds[p].planned||prdStatus(p)==='done')).length;
+  const plannedN=Object.keys(EPIC.prds).filter(p=>EPIC.prds[p].planned).length;
+  const openBlk=(EPIC.blockers||[]).filter(b=>b.sev==='alta').length;
+  const chips=[
+    `<span class="mchip"><b>${prdsDone}</b>/${defined.length} ${T.itemPl} completos</span>`,
+    `<span class="mchip"><b>${wavesDone}</b>/${EPIC.waves.length} ${T.groupPl.toLowerCase()} completas</span>`,
+  ];
+  if(plannedN) chips.push(`<span class="mchip">${plannedN} ${T.itemPl.toLowerCase()} planeados</span>`);
+  if(openBlk) chips.push(`<span class="mchip warn">${openBlk} bloqueo${openBlk>1?'s':''} alto${openBlk>1?'s':''}</span>`);
+  $('#metaChips').innerHTML=chips.join('');
+}
+let selPrd='';
+function renderWaves(){
+  const wrap=$('#waves'); wrap.innerHTML='';
+  EPIC.waves.forEach((w,wi)=>{
+    const known=w.prds.filter(p=>EPIC.prds[p]);
+    const allDone=known.length&&known.every(p=>EPIC.prds[p].planned||prdStatus(p)==='done');
+    const anyGo=known.some(p=>!EPIC.prds[p].planned&&prdStatus(p)!=='todo');
+    const allPlanned=known.length&&known.every(p=>EPIC.prds[p].planned);
+    let badge='locked',bl='en espera';
+    if(allDone&&!allPlanned){badge='done';bl='ola completa';}
+    else if(anyGo){badge='active';bl='en curso';}
+    else if(allPlanned){badge='locked';bl='planeada';}
+    const depNote=wi>0?`<span class="wave-dep">· depende de ${EPIC.waves[wi-1].title.split('·')[0].trim()}</span>`:'';
+    const sec=document.createElement('div'); sec.className='wave-group'+(badge==='locked'?' locked':'');
+    sec.innerHTML=`<div class="wave-head"><span class="wave-idx">${w.id}</span><div class="wave-heading"><div class="wave-titlerow"><span class="wave-title">${w.title.replace(/^Ola \d+ · /,'')}</span>${depNote}</div><div class="wave-goal">${w.goal}</div></div><span class="wave-badge ${badge}">${bl}</span></div><div class="wave-prds">${w.prds.map(pid=>prdCard(pid)).join('')}</div>`;
+    wrap.appendChild(sec);
+  });
+  wrap.querySelectorAll('.prd').forEach(el=>el.onclick=()=>{ const pid=el.dataset.prd; selPrd=(selPrd===pid?'':pid); $('#fPrd').value=selPrd; render(); renderWaves(); if(selPrd) $('#tbody').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+function prdCard(pid){
+  const p=EPIC.prds[pid]; if(!p) return `<div class="prd" style="opacity:.5;cursor:default"><div class="top"><span class="id">${pid}</span></div><div class="nm">—</div></div>`;
+  const sts=prdStatus(pid), t=prdStories(pid).length, d=prdDone(pid), pctv=t?Math.round(d/t*100):0;
+  const label={done:'hecho',doing:'en curso',todo:'pendiente',planned:'planeado'}[sts];
+  const meta=[];
+  p.depends.forEach(dp=>meta.push(`<span class="chip dep">${ICO.dep} ${dp.replace('PRD-','')}</span>`));
+  if(p.owns&&p.owns!=='—')meta.push(`<span class="chip mig">${ICO.owns} ${p.owns}</span>`);
+  if(p.interleave)meta.push(`<span class="chip inter">${ICO.inter} ${p.interleave.replace('PRD-','')}</span>`);
+  if(p.gated)meta.push(`<span class="chip gated">${ICO.gated} ${p.gated}</span>`);
+  if(p.planned)meta.push(`<span class="chip">sin ${T.unitPl} aún</span>`);
+  return `<div class="prd${selPrd===pid?' sel':''}" data-prd="${pid}" tabindex="0"><div class="top"><span class="id">${pid}</span><span class="pill ${sts}">${sts!=='planned'?sdot(sts):''}${label}</span></div><div class="nm">${p.title}</div><div class="scope">${p.scope}</div><div class="bar"><div class="fill${pctv===0?' zero':''}" style="width:${p.planned?0:pctv}%"></div></div><div class="st tnum"><span>${p.planned?'por definir':`<b>${d}</b> / ${t} ${T.unitPl}`}</span><span>${p.planned?'':pctv+'%'}</span></div><div class="meta">${meta.join('')}</div></div>`;
+}
+function renderSide(){
+  $('#deltas').innerHTML=(EPIC.deltas||[]).map(d=>`<div class="delta"><span class="was">${d.was}</span> → <span class="now">${d.now}</span> <b style="color:var(--muted);font-family:var(--mono);font-size:10px"> ${d.ref||''}</b></div>`).join('')||'<div class="empty">Sin notas de reconciliación.</div>';
+  $('#blockers').innerHTML=(EPIC.blockers||[]).map(b=>`<div class="blk ${b.cls||''}"><span class="dot"></span><div class="body"><div class="bt"><span class="code">${b.code}</span><span class="sev">${b.sev}</span></div><div class="title">${b.title}</div><div class="needs"><b>Necesita:</b> ${b.needs}</div></div></div>`).join('')||'<div class="empty">Sin bloqueos.</div>';
+}
+let sortK='wave',sortDir=1;
+function render(){
+  const q=$('#search').value.toLowerCase(), fw=$('#fWave').value, fp=$('#fPrd').value, fs=$('#fSt').value;
+  let list=ROWS.filter(r=>{ if(fw&&r.wave!==fw)return false; if(fp&&r.prd!==fp)return false; if(fs&&r.s!==fs)return false;
+    if(q&&!(r.id.toLowerCase().includes(q)||r.t.toLowerCase().includes(q)||r.prd.toLowerCase().includes(q)))return false; return true; });
+  const val=r=>({wave:r.wave,prd:r.prd,id:r.id,title:r.t.toLowerCase(),prio:r.p||'P9',tag:r.tag||'',status:ORDER.indexOf(r.s)}[sortK]);
+  list.sort((a,b)=>{const x=val(a),y=val(b); return (x>y?1:x<y?-1:0)*sortDir || (a.prd+a.id>b.prd+b.id?1:-1);});
+  $('#tbody').innerHTML=list.map(r=>{
+    const pribars=r.p?`<span class="pri ${r.p}"><span class="pribars n${{P1:3,P2:2,P3:1,P4:0}[r.p]}"><span></span><span></span><span></span></span><span class="pl">${r.p}</span></span>`:'<span class="pri none" style="color:var(--muted)">—</span>';
+    return `<tr><td><span class="wv">${r.wave}</span></td><td class="prdcell">${r.prd.replace('PRD-','')}</td><td class="usid">${r.id}</td><td>${r.t}</td><td style="text-align:center">${pribars}</td><td>${r.tag?`<span class="tag2">${r.tag}</span>`:''}</td><td><button class="stbtn ${r.s}" data-k="${r.key}">${sdot(r.s)}${STLABEL[r.s]}</button></td></tr>`;
+  }).join('')||`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:22px">Sin resultados.</td></tr>`;
+  $('#tableCount').textContent=`${list.length} de ${ROWS.length}`;
+  $('#tbody').querySelectorAll('.stbtn').forEach(b=>b.onclick=()=>{ const r=ROWS.find(x=>x.key===b.dataset.k); r.s=ORDER[(ORDER.indexOf(r.s)+1)%ORDER.length]; persist(); rollups(); renderWaves(); render(); });
+}
+function initFilters(){
+  $('#hTitle').textContent=EPIC.meta.name; $('#hCode').textContent=EPIC.meta.code;
+  $('#hMeta').textContent=`rama ${EPIC.meta.branch} · commit ${EPIC.meta.commit} · ${EPIC.meta.generatedAt}`;
+  $('#hNote').innerHTML=`Progreso derivado de las fuentes del ${T.item.toLowerCase()}. El estado que marques aquí es local en tu navegador hasta que lo exportes.`;
+  $('#wavesTitle').innerHTML=`${T.groupPl} de implementación <span class="hint">— cada ${T.group.toLowerCase()} depende de la anterior · clic en un ${T.item.toLowerCase()} para filtrar la tabla</span>`;
+  $('#tableTitle').innerHTML=`${T.unitPl.charAt(0).toUpperCase()+T.unitPl.slice(1)} · <span class="count" id="tableCount"></span>`;
+  $('#search').placeholder=`Buscar por ID, título o ${T.item.toLowerCase()}…`;
+  $('#fWave').innerHTML=`<option value="">${T.group}: todas</option>`+EPIC.waves.map(w=>`<option value="${w.id}">${w.title.replace(' · ',': ')}</option>`).join('');
+  $('#fPrd').innerHTML=`<option value="">${T.item}: todos</option>`+Object.keys(EPIC.prds).map(p=>`<option value="${p}">${p} · ${EPIC.prds[p].title}</option>`).join('');
+  $('#theadRow').innerHTML=`<th data-k="wave">${T.group}</th><th data-k="prd">${T.item}</th><th data-k="id">${T.unit}</th><th data-k="title">Título</th><th data-k="prio" style="text-align:center">Pri</th><th data-k="tag">Origen</th><th data-k="status">Estado</th>`;
+  document.querySelectorAll('thead th').forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=1;}
+    document.querySelectorAll('thead th').forEach(x=>x.classList.remove('sorted','asc','desc'));
+    th.classList.add('sorted',sortDir===1?'asc':'desc'); render(); });
+  $('#search').oninput=render;
+  ['#fWave','#fPrd','#fSt'].forEach(s=>$(s).onchange=()=>{ if(s==='#fPrd'){selPrd=$('#fPrd').value;renderWaves();} render(); });
+  $('#reset').onclick=()=>{ if(confirm('¿Reiniciar tu estado local al progreso base del repo?')){localStorage.removeItem(LS);location.reload();} };
+  $('#export').onclick=()=>{ const out={epic:EPIC.meta.code,generatedAt:EPIC.meta.generatedAt,byPrd:{}};
+    Object.keys(EPIC.prds).forEach(p=>{ out.byPrd[p]=prdStories(p).map(r=>({id:r.id,status:r.s})); });
+    const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=EPIC.meta.code+'-progress.json'; a.click(); };
+  $('#legend').innerHTML=`<span>${sdot('done')} hecho</span><span>${sdot('doing')} en curso</span><span>${sdot('todo')} pendiente</span><span>${ICO.dep} depende de</span><span>${ICO.owns} entregable propio</span><span>${ICO.inter} acoplado a nivel ${T.unit}</span><span>${ICO.gated} arranque bloqueado</span><span>clic en el estado para ciclar pendiente→en curso→hecho.</span>`;
+}
+initFilters(); rollups(); renderWaves(); renderSide(); render();
+</script>
+</body>
+</html>
