@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{EPIC_NAME}} · Journey Map</title>
+<style>
+:root{
+  --bg:#09090b;--panel:#131318;--panel2:#191921;--panel3:#212129;--border:#232329;--border2:#2f2f38;
+  --text:#f2f2f5;--dim:#a3a3ae;--muted:#75757f;
+  --accent:#6c78ea;--accent2:#98a4ff;
+  --teal:#42dba0;--amber:#e8b849;--rose:#f0555c;--slate:#83899c;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter','Segoe UI',sans-serif;
+  --mono:'SF Mono','JetBrains Mono',ui-monospace,monospace;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --shadow-card:0 1px 0 rgba(255,255,255,.045) inset,0 1px 1px rgba(0,0,0,.3),0 14px 34px -20px rgba(0,0,0,.75);
+  --shadow-card-hover:0 1px 0 rgba(255,255,255,.06) inset,0 1px 1px rgba(0,0,0,.3),0 22px 48px -18px rgba(0,0,0,.85);
+  --shadow-sm:0 1px 0 rgba(255,255,255,.04) inset,0 8px 20px -14px rgba(0,0,0,.7);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scrollbar-color:var(--border2) transparent;scrollbar-width:thin}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:7px;border:3px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--slate)}
+::selection{background:var(--accent);color:#fff}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.55;padding:48px clamp(20px,5vw,68px) 140px;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2);text-decoration:none}
+.tnum{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent2);outline-offset:3px;border-radius:6px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:40px;flex-wrap:wrap;margin-bottom:28px}
+.headmeta{max-width:58ch}
+h1{font-size:31px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.sub{color:var(--dim);font-size:13.5px;margin-top:9px;line-height:1.6}
+.sub b{color:var(--text);font-weight:600}
+.sub .mono{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stat{text-align:right;min-width:180px}
+.stat .pct{font-family:var(--mono);font-size:42px;font-weight:700;letter-spacing:-.035em;line-height:1}
+.stat .pct .u{font-size:14px;color:var(--dim);font-weight:500;margin-left:2px}
+.stat .subline{font-size:12.5px;color:var(--dim);font-family:var(--mono);margin-top:8px}
+.stat .subline b{color:var(--text);font-weight:600}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:36px}
+.tab{font-size:12.5px;font-weight:600;padding:9px 17px;border-radius:100px;background:var(--panel);color:var(--dim);cursor:pointer;border:none;box-shadow:var(--shadow-sm);transition:color .15s,background-color .15s,transform .12s}
+.tab:hover{color:var(--text)}
+.tab:active{transform:scale(.96)}
+.tab.active{background:linear-gradient(180deg,#7a86ee,var(--accent));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px -10px rgba(108,120,234,.6)}
+h2.sec{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:700}
+h2.sec .hint{text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400;font-size:12px;margin-left:8px}
+.gapbanner{background:rgba(240,85,92,.08);border-radius:16px;padding:18px 20px;margin-bottom:48px;box-shadow:var(--shadow-sm)}
+.gapbanner .gt{display:flex;align-items:center;gap:9px;font-weight:700;font-size:13.5px;color:var(--rose);margin-bottom:10px}
+.gaprow{font-size:12.5px;color:var(--dim);padding:7px 0;border-top:1px solid rgba(240,85,92,.18)}
+.gaprow:first-of-type{border-top:none}
+.gaprow b{color:var(--text)}
+.gaprow .why{color:var(--muted);margin-top:2px}
+.mapsec{margin-bottom:52px}
+.mapwrap{position:relative;max-width:520px;margin:0 auto}
+.mapwrap svg{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible}
+.seg{fill:none;stroke-width:4;stroke-linecap:round}
+.seg.on{stroke:var(--teal)}
+.seg.off{stroke:var(--border2);stroke-dasharray:2 10}
+.node{width:60px;height:60px;border-radius:50%;position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;padding:0;transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.node:hover{transform:translate(-50%,-50%) scale(1.06)}
+.node:active{transform:translate(-50%,-50%) scale(.96)}
+.node.done{background:var(--teal);color:#062318;box-shadow:0 0 0 5px rgba(66,219,160,.15),var(--shadow-sm)}
+.node.doing{background:var(--panel2);border:2px solid var(--amber);color:var(--amber);box-shadow:0 0 0 6px rgba(232,184,73,.16),var(--shadow-sm);animation:pulse 2.4s ease-in-out infinite}
+.node.todo{background:var(--panel2);border:2px solid var(--border2);color:var(--muted)}
+.node.gap{background:var(--panel2);border:2px dashed var(--rose);color:var(--rose);box-shadow:0 0 0 5px rgba(240,85,92,.12)}
+.node.sel{outline:2px solid var(--accent2);outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.node{animation:none!important}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 6px rgba(232,184,73,.16),var(--shadow-sm)}50%{box-shadow:0 0 0 11px rgba(232,184,73,.26),var(--shadow-sm)}}
+.nlabel{position:absolute;transform:translate(-50%,0);width:130px;text-align:center;font-size:11.5px;font-weight:600;color:var(--dim);line-height:1.3;pointer-events:none}
+.nlabel .n{display:block;font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--muted);margin-bottom:2px;letter-spacing:.04em}
+.detail{background:var(--panel);border-radius:18px;padding:24px 26px;box-shadow:var(--shadow-card);margin-top:8px}
+.detail .dtop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:16px}
+.detail .dname{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.detail .dpersona{font-size:11.5px;color:var(--muted);margin-top:3px}
+.dpill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 11px 4px 8px;border-radius:100px;white-space:nowrap;flex:none}
+.dpill.done{background:rgba(66,219,160,.13);color:var(--teal)}
+.dpill.doing{background:rgba(232,184,73,.13);color:var(--amber)}
+.dpill.todo{background:var(--panel3);color:var(--dim)}
+.dpill.gap{background:rgba(240,85,92,.13);color:var(--rose)}
+.drows{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:16px}
+@media(min-width:640px){.drows{grid-template-columns:1fr 1fr}}
+.drow .l{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:5px}
+.drow .v{font-size:13px;color:var(--text);line-height:1.55}
+.dwarn{background:rgba(240,85,92,.09);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--rose);margin-bottom:16px;line-height:1.5}
+.dleft{background:var(--panel3);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--dim);margin-bottom:16px;line-height:1.5}
+.dleft b{color:var(--text)}
+.dchips{display:flex;gap:7px;flex-wrap:wrap}
+.dchip{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:8px;background:rgba(108,120,234,.14);color:var(--accent2)}
+.checklist{display:flex;flex-direction:column;gap:9px}
+.ckrow{display:flex;align-items:flex-start;gap:12px;background:var(--panel);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow-sm)}
+.ckicon{width:19px;height:19px;border-radius:50%;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center}
+.ckicon.done{background:var(--teal);color:#062318}
+.ckicon.todo{border:1.6px solid var(--border2)}
+.ckicon.unknown{border:1.6px dashed var(--amber);color:var(--amber);font-size:11px;font-weight:800}
+.cktext{font-size:13px;color:var(--text);line-height:1.5;padding-top:1px}
+.ckrow.done .cktext{color:var(--dim)}
+.unk-note{font-size:11px;color:var(--amber);margin-top:3px}
+.legend{font-size:11.5px;color:var(--muted);margin-top:28px;line-height:2.4}
+.legend span{display:inline-flex;align-items:center;gap:7px;margin-right:20px}
+.legend .dot{width:11px;height:11px;border-radius:50%;flex:none}
+.legend .dot.done{background:var(--teal)}
+.legend .dot.doing{background:var(--panel2);border:2px solid var(--amber)}
+.legend .dot.todo{background:var(--panel2);border:2px solid var(--border2)}
+.legend .dot.gap{background:var(--panel2);border:2px dashed var(--rose)}
+</style>
+</head>
+<body>
+<header>
+  <div class="headmeta">
+    <h1 id="hTitle"></h1>
+    <div class="sub">EPIC <b id="hCode"></b> · <span class="mono" id="hMeta"></span></div>
+    <div class="sub" style="margin-top:2px">Cada nodo es una etapa del journey real de un usuario, no un ticket — coloreado según lo que realmente está construido.</div>
+  </div>
+  <div class="stat">
+    <div class="pct tnum"><span id="statPct">0%</span></div>
+    <div class="subline tnum" id="statSub"></div>
+  </div>
+</header>
+<div class="tabs" id="tabs"></div>
+<div class="gapbanner" id="gapBanner" style="display:none"></div>
+<div class="mapsec">
+  <h2 class="sec" id="mapTitle"></h2>
+  <div class="mapwrap" id="mapWrap"></div>
+  <div class="detail" id="detail"></div>
+</div>
+<h2 class="sec">Condiciones de victoria <span class="hint">— el Completeness Checklist del journey</span></h2>
+<div class="checklist" id="checklist"></div>
+<div class="legend" id="legend"></div>
+
+<script>
+/* =====================================================================
+   DATOS DEL JOURNEY — REEMPLAZA TODO ESTE OBJETO AL GENERAR EL MAPA.
+   Esquema:
+   meta: {name, code, branch, commit, generatedAt}
+   personas[]: {
+     id, name, jobToBeDone, entry, platform,
+     stages: [{
+       id, label,
+       entryCondition, userAction, systemResponse, metric,
+       status: "done"|"doing"|"todo"|"gap",   // gap = ningún PRD/historia lo implementa
+       implementedBy: ["PRD-01", ...],         // [] si status es "gap"
+       whatsLeft: "..."                        // vacío si status es "done"
+     }, ...]
+   }
+   checklist[]: {text:"...", status:"done"|"todo"|"unknown"}   // del Completeness Checklist
+   ===================================================================== */
+const JOURNEY = {
+  meta:{ name:"{{EPIC_NAME}}", code:"{{EPIC_CODE}}", branch:"main", commit:"0000000", generatedAt:"YYYY-MM-DD" },
+  personas:[
+    { id:"owner", name:"Business Owner", jobToBeDone:"Llevar el control del negocio sin fricción", entry:"Anuncio pagado / referido", platform:"web",
+      stages:[
+        {id:"acquisition", label:"Adquisición", entryCondition:"Ve un anuncio o referido", userAction:"Hace clic", systemResponse:"Llega a la landing", metric:"CTR > 3%", status:"done", implementedBy:["PRD-01"], whatsLeft:""},
+        {id:"landing", label:"Landing", entryCondition:"Llega a la página", userAction:"Lee la propuesta de valor", systemResponse:"Muestra CTA claro", metric:"Scroll > 50%", status:"done", implementedBy:["PRD-01"], whatsLeft:""},
+        {id:"signup", label:"Signup / Auth", entryCondition:"Decide registrarse", userAction:"Completa el formulario o usa Google", systemResponse:"Crea la cuenta", metric:"Completion > 70%", status:"doing", implementedBy:["PRD-02"], whatsLeft:"Falta el flujo de OAuth con Google."},
+        {id:"onboarding", label:"Onboarding", entryCondition:"Cuenta creada", userAction:"Completa el setup inicial", systemResponse:"Guía paso a paso hasta el 'aha moment'", metric:"Aha moment > 60%", status:"todo", implementedBy:["PRD-03"], whatsLeft:"PRD-03 no ha empezado."},
+        {id:"core", label:"Core Loop", entryCondition:"Onboarding completo", userAction:"Registra una venta", systemResponse:"Actualiza el dashboard en tiempo real", metric:"D7 retention > 40%", status:"todo", implementedBy:["PRD-04"], whatsLeft:"Depende de que termine Onboarding."},
+        {id:"payments", label:"Payments", entryCondition:"Llega al límite del plan gratuito", userAction:"Ingresa método de pago", systemResponse:"Procesa el cobro y activa el plan", metric:"Trial-to-paid > 25%", status:"gap", implementedBy:[], whatsLeft:"Ningún PRD cubre el checkout todavía."},
+        {id:"support", label:"Support", entryCondition:"Se atora en algo", userAction:"Busca ayuda", systemResponse:"Chat o centro de ayuda a 2 clics", metric:"Alcanzable en <2 clics", status:"gap", implementedBy:[], whatsLeft:"No hay PRD de soporte en este EPIC."},
+        {id:"retention", label:"Retention", entryCondition:"Ya es usuario activo", userAction:"Vuelve regularmente", systemResponse:"Notificaciones y hábitos", metric:"WAU/MAU > 40%", status:"todo", implementedBy:["PRD-05"], whatsLeft:"PRD-05 planeado, sin empezar."},
+      ]},
+    { id:"cashier", name:"Cashier", jobToBeDone:"Cobrar rápido sin errores", entry:"Invitación del Business Owner", platform:"terminal / iOS",
+      stages:[
+        {id:"invite", label:"Invitación", entryCondition:"El owner lo invita", userAction:"Acepta la invitación", systemResponse:"Crea su cuenta con rol Cashier", metric:"Completion > 90%", status:"done", implementedBy:["PRD-02"], whatsLeft:""},
+        {id:"training", label:"Training rápido", entryCondition:"Primera sesión", userAction:"Ve el tutorial de 60s", systemResponse:"Tutorial interactivo in-app", metric:"Skip rate < 20%", status:"todo", implementedBy:[], whatsLeft:"No diseñado aún — no está en USER-JOURNEY.md como PRD."},
+        {id:"checkout", label:"Cobro", entryCondition:"Cliente listo para pagar", userAction:"Escanea productos y cobra", systemResponse:"Procesa el pago y emite recibo", metric:"Tiempo por venta < 20s", status:"doing", implementedBy:["PRD-04"], whatsLeft:"Falta el modo offline."},
+      ]},
+  ],
+  checklist:[
+    {text:"Un usuario puede completar el journey completo desde el anuncio hasta la primera venta en menos de 10 minutos.", status:"unknown"},
+    {text:"Todo flujo de pago tiene manejo de errores y reintento.", status:"todo"},
+    {text:"Todo flujo de auth maneja sesiones expiradas con gracia.", status:"done"},
+    {text:"El soporte es alcanzable en 2 clics desde cualquier pantalla.", status:"todo"},
+    {text:"El offboarding no borra datos por al menos 30 días.", status:"unknown"},
+  ],
+};
+
+/* ---------- iconos ---------- */
+const ICO = {
+  check:'<svg width="18" height="18" viewBox="0 0 18 18"><path d="M4 9.5l3 3 7-7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  lock:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5.5 7V4.8a2.5 2.5 0 015 0V7" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
+  dot:'<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="3" fill="currentColor"/></svg>',
+  warn:'<svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2.5L16 15H2L9 2.5Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/><path d="M9 7.2v3.6M9 12.6h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  bang:'<svg width="15" height="15" viewBox="0 0 15 15"><path d="M7.5 2L14 13.5H1L7.5 2Z" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round"/><path d="M7.5 6.2v3M7.5 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+};
+const STMETA = {
+  done:{label:'hecho', icon:ICO.check},
+  doing:{label:'en curso', icon:ICO.dot},
+  todo:{label:'pendiente', icon:ICO.lock},
+  gap:{label:'sin dueño', icon:ICO.bang},
+};
+
+/* ---------- lógica ---------- */
+const $=s=>document.querySelector(s);
+let activePersona=0, selectedStage={};
+
+function pct(stages){ const t=stages.length, d=stages.filter(s=>s.status==='done').length; return t?Math.round(d/t*100):0; }
+
+function pickDefaultStage(stages){
+  return (stages.find(s=>s.status==='gap')||stages.find(s=>s.status==='doing')||stages.find(s=>s.status==='todo')||stages[0]).id;
+}
+
+function renderHeader(){
+  $('#hTitle').textContent=JOURNEY.meta.name; $('#hCode').textContent=JOURNEY.meta.code;
+  $('#hMeta').textContent=`rama ${JOURNEY.meta.branch} · commit ${JOURNEY.meta.commit} · ${JOURNEY.meta.generatedAt}`;
+}
+
+function renderStat(){
+  const p=JOURNEY.personas[activePersona], stages=p.stages, done=stages.filter(s=>s.status==='done').length;
+  $('#statPct').textContent=pct(stages)+'%';
+  $('#statSub').innerHTML=`<b>${done}</b>/${stages.length} etapas · ${p.name}`;
+}
+
+function renderTabs(){
+  if(JOURNEY.personas.length<2){ $('#tabs').style.display='none'; return; }
+  $('#tabs').innerHTML=JOURNEY.personas.map((p,i)=>`<button class="tab${i===activePersona?' active':''}" data-i="${i}">${p.name} · ${pct(p.stages)}%</button>`).join('');
+  $('#tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{ activePersona=+b.dataset.i; renderAll(); });
+}
+
+function renderGapBanner(){
+  const gaps=[];
+  JOURNEY.personas.forEach(p=>p.stages.forEach(s=>{ if(s.status==='gap') gaps.push({persona:p.name, stage:s.label, why:s.entryCondition}); }));
+  const el=$('#gapBanner');
+  if(!gaps.length){ el.style.display='none'; return; }
+  el.style.display='block';
+  el.innerHTML=`<div class="gt">${ICO.warn}${gaps.length} etapa${gaps.length>1?'s':''} del journey sin ningún PRD que la implemente</div>`+
+    gaps.map(g=>`<div class="gaprow"><b>${g.stage}</b> — ${g.persona}<div class="why">${g.why}</div></div>`).join('');
+}
+
+function nodePos(i){ const AMP=104, STEPY=128, PERIOD=4.3; return { x: Math.sin((i/PERIOD)*Math.PI*2)*AMP, y: 64 + i*STEPY }; }
+function segD(p0,p1){ const c1y=p0.y+(p1.y-p0.y)*.5, c2y=p1.y-(p1.y-p0.y)*.5; return `M${p0.x} ${p0.y} C${p0.x} ${c1y}, ${p1.x} ${c2y}, ${p1.x} ${p1.y}`; }
+
+function renderMap(){
+  const p=JOURNEY.personas[activePersona], stages=p.stages;
+  $('#mapTitle').innerHTML=`Camino de ${p.name} <span class="hint">— ${p.jobToBeDone}</span>`;
+  if(!selectedStage[p.id]) selectedStage[p.id]=pickDefaultStage(stages);
+  const pts=stages.map((s,i)=>nodePos(i));
+  const H=pts[pts.length-1].y+64;
+  const wrap=$('#mapWrap'); wrap.style.height=H+'px';
+  let svg=`<svg viewBox="-160 0 320 ${H}" preserveAspectRatio="xMidYMin meet">`;
+  for(let i=1;i<pts.length;i++){ svg+=`<path class="seg ${stages[i-1].status==='done'?'on':'off'}" d="${segD(pts[i-1],pts[i])}"/>`; }
+  svg+='</svg>';
+  const nodes=stages.map((s,i)=>{
+    const pos=pts[i], meta=STMETA[s.status];
+    return `<button class="node ${s.status}${selectedStage[p.id]===s.id?' sel':''}" style="left:calc(50% + ${pos.x}px);top:${pos.y}px" data-id="${s.id}" title="${s.label} — ${meta.label}">${meta.icon}</button>`+
+      `<div class="nlabel" style="left:calc(50% + ${pos.x}px);top:${pos.y+40}px"><span class="n">${i+1}</span>${s.label}</div>`;
+  }).join('');
+  wrap.innerHTML=svg+nodes;
+  wrap.querySelectorAll('.node').forEach(n=>n.onclick=()=>{ selectedStage[p.id]=n.dataset.id; renderMap(); renderDetail(); });
+}
+
+function renderDetail(){
+  const p=JOURNEY.personas[activePersona], s=p.stages.find(x=>x.id===selectedStage[p.id]);
+  const meta=STMETA[s.status];
+  let html=`<div class="dtop"><div><div class="dname">${s.label}</div><div class="dpersona">${p.name} · etapa ${p.stages.indexOf(s)+1} de ${p.stages.length}</div></div><span class="dpill ${s.status}">${meta.icon}${meta.label}</span></div>`;
+  html+=`<div class="drows">
+    <div class="drow"><div class="l">Condición de entrada</div><div class="v">${s.entryCondition}</div></div>
+    <div class="drow"><div class="l">Acción del usuario</div><div class="v">${s.userAction}</div></div>
+    <div class="drow"><div class="l">Respuesta del sistema</div><div class="v">${s.systemResponse}</div></div>
+    <div class="drow"><div class="l">Métrica de éxito</div><div class="v">${s.metric}</div></div>
+  </div>`;
+  if(s.status==='gap') html+=`<div class="dwarn">${ICO.bang} Ningún PRD ni historia de este EPIC implementa esta etapa todavía.</div>`;
+  else if(s.whatsLeft) html+=`<div class="dleft"><b>Falta:</b> ${s.whatsLeft}</div>`;
+  html+=`<div class="dchips">${s.implementedBy.length?s.implementedBy.map(id=>`<span class="dchip">${id}</span>`).join(''):'<span class="dchip" style="background:var(--panel3);color:var(--muted)">sin PRD asignado</span>'}</div>`;
+  $('#detail').innerHTML=html;
+}
+
+function renderChecklist(){
+  const icon={done:ICO.check,todo:'',unknown:'?'};
+  $('#checklist').innerHTML=JOURNEY.checklist.map(c=>`<div class="ckrow ${c.status}"><span class="ckicon ${c.status}">${icon[c.status]}</span><div><div class="cktext">${c.text}</div>${c.status==='unknown'?'<div class="unk-note">No se pudo confirmar solo con los documentos — verificar manualmente.</div>':''}</div></div>`).join('');
+}
+
+function renderLegend(){
+  $('#legend').innerHTML=`<span><span class="dot done"></span>hecho</span><span><span class="dot doing"></span>en curso</span><span><span class="dot todo"></span>pendiente</span><span><span class="dot gap"></span>sin PRD que lo cubra</span><span>clic en un nodo para ver el detalle.</span>`;
+}
+
+function renderAll(){ renderStat(); renderTabs(); renderMap(); renderDetail(); }
+renderHeader(); renderGapBanner(); renderAll(); renderChecklist(); renderLegend();
+</script>
+</body>
+</html>

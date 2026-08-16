@@ -11,6 +11,8 @@ Built for software EPICs (PRDs, user stories, migrations) by default, but the vo
 
 You are producing a file, not a chat summary. The panel is the deliverable. It must be accurate (driven by the project's own progress sources — `progress.md`/PRD files for dev EPICs, whatever tracking doc exists for other projects) and self-contained (no external assets — opens offline, publishable as an artifact).
 
+**See also `journey-map`** — same underlying progress data, organized around the user's experience (a game-like level path per persona) instead of PRDs/waves. Reach for that one when the user wants the product-experience view or asks "what does a real user actually get right now."
+
 ## What the panel contains (already built into the template)
 
 - **Header stat** — overall % (by task count) as a compact number + segmented progress bar (done/doing/todo), no decorative ring.
