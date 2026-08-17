@@ -138,6 +138,11 @@ For each Priority group (sequential between groups, parallel within):
 
 1. Launch one @ralph per story (parallel within group)
    Each ralph: "Implement USxxx from [PRD] using spec at [spec path]"
+   [fleet-dispatch check] Tier = Prototype/Alpha AND the story is small/single-file/mechanical
+   → may route to `fleet-dispatch` (another provider via Orca) instead of a Claude ralph,
+   to save Claude Code usage. Steps 2-7 below still apply unchanged regardless of who executed
+   it. Never for Beta/GA, migrations, auth, or payments stories. Also available on request any
+   time the user names a provider ("mándale esto a Copilot/OpenCode/Codex/Gemini").
 
 2. [Law #4 check] Sprint Contract must have Assumptions section
 
@@ -217,6 +222,7 @@ engram save "Session $(date +%Y-%m-%d): <feature>" "<what built, decisions, bloc
 | Code review | `/code-reviewer` |
 | Check skill usage stats | `/skill-tracking` |
 | Debug a complex architectural problem | `/software-architect` |
+| Ahorrar uso de Claude en algo mecánico, o mandar algo explícitamente a otro proveedor | `/fleet-dispatch` — vía Orca, usa la suscripción de ese proveedor |
 | UI implementation only | `/eng-frontend` |
 | Backend/API only | `/eng-backend` |
 | Full pipeline, end to end | `/orchestrator` ← **this skill** |
