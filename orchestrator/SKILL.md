@@ -148,6 +148,15 @@ For each Priority group (sequential between groups, parallel within):
    single most expensive silent mistake this orchestrator can make. Same rule for any other
    sub-skill this launches whose agent definition pins a specific model (`documenter` → Haiku,
    judges → Opus) — pass it explicitly, don't assume the frontmatter carries through.
+   [Teams-mode discipline] Do NOT pass a `name` to the Agent/Task calls that launch ralph,
+   evaluator, guardian-angel, or judges. On a machine with
+   `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` set, a named spawn becomes a persistent background
+   "teammate" that only sends idle pings instead of returning its result the normal way — the
+   exact failure mode that broke `llm-council`'s Stage 1 fan-out (see that skill's own fix).
+   Track parallel ralphs by their story ID in your own notes/TaskList instead of by giving the
+   spawn a `name` — a label used only for human-readable tracking isn't worth risking a
+   non-returning subagent, and it's the leading hypothesis for why the model-discipline note
+   above can silently fail to apply.
    [fleet-dispatch check] Tier = Prototype/Alpha AND the story is small/single-file/mechanical
    → may route to `fleet-dispatch` (another provider via Orca) instead of a Claude ralph,
    to save Claude Code usage. Steps 2-7 below still apply unchanged regardless of who executed
