@@ -138,6 +138,16 @@ For each Priority group (sequential between groups, parallel within):
 
 1. Launch one @ralph per story (parallel within group)
    Each ralph: "Implement USxxx from [PRD] using spec at [spec path]"
+   [Model discipline] Always pass `model: "sonnet"` explicitly in the Agent/Task call that
+   launches ralph — never rely only on ralph.md's own frontmatter default. ralph.md does
+   declare `model: sonnet`, but a named/teammate-mode spawn (any Agent call given a `name`,
+   which is what `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` turns every named spawn into) is not
+   confirmed to always honor that agent-type default over the orchestrating session's own
+   model — passing it explicitly costs nothing and removes the ambiguity. This is the
+   highest-leverage token-cost lever in this pipeline: an accidental Opus ralph swarm is the
+   single most expensive silent mistake this orchestrator can make. Same rule for any other
+   sub-skill this launches whose agent definition pins a specific model (`documenter` → Haiku,
+   judges → Opus) — pass it explicitly, don't assume the frontmatter carries through.
    [fleet-dispatch check] Tier = Prototype/Alpha AND the story is small/single-file/mechanical
    → may route to `fleet-dispatch` (another provider via Orca) instead of a Claude ralph,
    to save Claude Code usage. Steps 2-7 below still apply unchanged regardless of who executed
