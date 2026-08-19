@@ -1,0 +1,61 @@
+{
+  "brand": {
+    "name": "TRUTH",
+    "name_accent_suffix": ".",
+    "tagline": "TRUTH es una plataforma de Epifanias Digitales LLC, dba MarketINC Agency & Dev Studio.",
+    "tagline_bold": "Epifanias Digitales LLC",
+    "logo_path": "assets/logo-horizontal.png"
+  },
+  "colors": {
+    "bg": "#ffffff",
+    "surface": "#faf9f7",
+    "surface_2": "#eeece7",
+    "pale_primary": "#edfce9",
+    "pale_info": "#f1f5ff",
+    "pale_accent": "#fff4f1",
+    "border": "#e5e7eb",
+    "hairline": "#d9d9dd",
+    "text": "#212121",
+    "text_paper": "#17171c",
+    "text_dim": "#616161",
+    "muted": "#93939f",
+    "accent": "#ff7759",
+    "primary": "#003c33",
+    "info": "#1863dc",
+    "dark": "#071829"
+  },
+  "fonts": {
+    "display": "Space Grotesk",
+    "body": "Inter",
+    "mono": "JetBrains Mono",
+    "google_fonts_url": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+    "docx_font": "Calibri"
+  },
+  "cover": {
+    "kicker": "Propuesta de servicio",
+    "kicker_docx": "Propuesta de servicio",
+    "title_html": "Anal&iacute;tica de conversaciones para <strong>Zona Oriente</strong>",
+    "title_bold_docx": "Zona Oriente",
+    "subtitle": "Procesamiento diario de la totalidad de las conversaciones, plataforma de inteligencia operativa y reporte de clientes a contactar, disponible a las 08:00.",
+    "meta": [
+      ["Preparada para", "HITSS"],
+      ["Operación", "Telmex Zona Oriente"],
+      ["Fecha", "31 de julio de 2026"],
+      ["Vigencia", "30 días naturales"]
+    ]
+  },
+  "output": {
+    "base_name": "propuesta-cliente-proyecto",
+    "html_title": "Propuesta TRUTH · Cliente",
+    "anexos": [
+      {
+        "heading_prefix": "## Anexo A",
+        "base_name": "anexo-a-cliente-proyecto",
+        "html_title": "Anexo A · TRUTH",
+        "cover_kicker": "Anexo técnico",
+        "cover_title_html": "Anexo A del documento principal",
+        "cover_subtitle": "Detalle técnico referenciado en la propuesta principal."
+      }
+    ]
+  }
+}
