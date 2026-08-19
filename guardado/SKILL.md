@@ -1,9 +1,9 @@
 ---
-name: session-checkpoint
-description: Save progress, decisions, learnings, and next steps to persistent memory before a context compact (manual /compact or auto-compact) or at any natural session boundary — using ONE fixed template and a clear decision tree for where to write it, instead of improvising a different format every time. Trigger on "prepare for compact", "save your progress", "checkpoint this session", "guarda el progreso", "prepara memoria persistente antes del compact", "deja todo listo para continuar", "antes de compactar", "save your learnings and next steps so we can continue later" — or run it proactively right before you invoke /compact yourself. Named `session-checkpoint` (not `checkpoint`) because Claude Code has its own built-in `/checkpoint` CLI command that the Skill tool cannot invoke — that name collision is reserved, don't rename this back to it.
+name: guardado
+description: Save progress, decisions, learnings, and next steps to persistent memory before a context compact (manual /compact or auto-compact) or at any natural session boundary — using ONE fixed template and a clear decision tree for where to write it, instead of improvising a different format every time. Trigger on "/guardado", "prepare for compact", "save your progress", "guarda el progreso", "prepara memoria persistente antes del compact", "deja todo listo para continuar", "antes de compactar", "save your learnings and next steps so we can continue later" — or run it proactively right before you invoke /compact yourself. Named `guardado`, not `checkpoint` — Claude Code has its own built-in `/checkpoint` CLI command that the Skill tool cannot invoke, and not `memory` or `session-checkpoint` either, both already taken/renamed-from. Don't rename this back to any of those three.
 ---
 
-# Session Checkpoint
+# Guardado (Session Checkpoint)
 
 One fixed ritual for "write down where we are so the next session — yours after a compact, or another agent entirely — can pick this up cold." The problem this solves: every agent was asked for this the same way and each produced a differently-shaped note (different sections, different files, different level of detail). This skill fixes the shape. It does not fix where memory lives for a given project — it routes to whatever this project already uses (Engram, the 4-file always-on-memory system, or a plain fallback file) and writes the same template into it every time.
 
