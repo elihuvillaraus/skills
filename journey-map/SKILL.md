@@ -13,7 +13,7 @@ You are producing a file, not a chat summary. The map is the deliverable, and it
 
 - **`user-journey`** produces `USER-JOURNEY.md` — the journey's skeleton (personas, stages, entry conditions, Mermaid flowchart, Completeness Checklist). journey-map **requires this file to exist**; it does not invent journey structure. If it's missing, offer to run `/user-journey` first — don't fabricate stages from the EPIC alone.
 - **`epic-panel`** is PRD-first (waves → PRDs → stories) — the engineering-management view. journey-map is user-first (personas → stages) — the product-experience view of the exact same underlying progress. Both read the same PRDs/progress.md; they just organize the same truth around a different spine. Generate both if the user wants both views; don't merge them into one artifact — the shapes are genuinely different (dashboard vs. game path).
-- **`process-flow-diagram`** is a generic, non-progress-aware flow diagram. Not used here.
+- **`diagram-design`** (type `flowchart`/`process`) is a generic, non-progress-aware flow diagram. Not used here.
 
 ## What the map contains (already built into the template)
 
