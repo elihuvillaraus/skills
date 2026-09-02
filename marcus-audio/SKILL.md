@@ -35,7 +35,7 @@ Two standardized voices, both `es-MX`, confirmed via `GET /voices/{id}` on 2026-
 Default to **Daniela** unless the user asks for a male voice or the content clearly calls for one (e.g. a male narrator persona). Browse `references/cartesia-tts.md` for how to list/audition other catalog voices before introducing a third one.
 
 ### 4. Measure real audio duration — never estimate from word count
-Every generated clip's actual length is the only number that goes into a Hyperframes `data-duration` (or any other timeline). After generating, always:
+The voice sets the pace, not the other way around — see `hyperframes-helper`'s "Voiceover-Driven Pacing" rule. Never trim, speed up, or re-time a generated VO clip to fit a scene or animation; the scene's timing adjusts to the VO's real duration. Every generated clip's actual length is the only number that goes into a Hyperframes `data-duration` (or any other timeline). After generating, always:
 ```bash
 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 out.mp3
 ```
