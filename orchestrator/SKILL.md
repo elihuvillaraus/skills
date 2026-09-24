@@ -46,6 +46,7 @@ Every agent in every phase operates under these laws. **Orchestrator enforces al
 | 14 | **Executive Mode Always** — every subagent prompt appends the directive below; chat/reports terse, PRDs/specs/commits stay full prose | Report reads as paragraphs, not facts = trim before accepting |
 | 15 | **Assumed Decisions Owe Ratification** — ralph may build past a missing load-bearing decision only by recording it in the PRD's `## Assumed Decisions`, never by silently guessing | Open entries at Phase 6 → note in final report, run `architect ratify` before calling the feature settled |
 | 16 | **Rigor Tiers Right-Size the Gates** — PRD's **Rigor Tier** (Prototype/Alpha/Beta/GA) decides which of evaluator/guardian-angel/tester/dia-del-juicio run; unset = GA | Phase 3/5 skipping a gate with no tier declared = bug, default to GA |
+| 17 | **Checklist Before Signal** — a subagent's own completion signal (`RALPH_DONE`, `EVALUATOR_APPROVED`, `GGA_APPROVED`, …) is only trustworthy against its concrete acceptance checklist, never a prose "looks done" — and a turn that ends with plain text instead of the expected signal is not done, it's stalled | Re-check the story's checklist item-by-item before accepting the signal; a stalled subagent gets at most 2 nudges toward its own signal before you escalate/reassign — don't keep re-prompting indefinitely |
 
 **Law 14 directive — append verbatim to every subagent launch prompt (researcher, architect, spec-writer, ralph, evaluator, guardian-angel, tester, documenter):**
 > Operate in executive mode: caveman-terse chat and reports (no filler, no preamble, no decorative tables/emoji, facts only — skill `caveman`) and ponytail-minimal code (YAGNI ladder, smallest correct diff, ≤3-line explanation after code — skill `ponytail`). Exception: PRDs, specs, commit messages, and any persisted doc stay full normal prose — compress the talk, not the artifact.
@@ -148,6 +149,27 @@ For each Priority group (sequential between groups, parallel within):
    single most expensive silent mistake this orchestrator can make. Same rule for any other
    sub-skill this launches whose agent definition pins a specific model (`documenter` → Haiku,
    judges → Opus) — pass it explicitly, don't assume the frontmatter carries through.
+   [Model discipline — open question] ralph's forced Sonnet pin predates Opus 5.5's low-effort
+   tier, which Anthropic now positions as the cheap/fast option for subagent-shaped work —
+   this may or may not still be the right call. Don't flip the pin on a hunch either way: before
+   changing it, run the same real user story through ralph at each effort level with a fresh
+   context per run, and compare cost/quality side by side (one HTML page is enough). Until that
+   eval exists, the Sonnet pin above stands.
+   [Effort discipline] Opus 5.5 defaults to **medium** effort (not high, unlike Opus 5) and at
+   medium already matches or beats Opus-5-at-high on coding/knowledge work — don't carry over a
+   habit of forcing high everywhere. Set effort explicitly per role instead of leaving it
+   implicit: **low** for mechanical/single-shot work (`documenter`, fleet-dispatch-routed
+   stories), **medium** (the default — fine to omit) for `architect`/`spec-writer`/`evaluator`/
+   `ralph`, **high** for judgment-heavy gates (`guardian-angel`, `dia-del-juicio`'s judges),
+   **xhigh** only when a specific run has already been measured to need >30min and the quality
+   gain is confirmed — never as a default.
+   [Time budget] Give every parallel fan-out (Phase 1 research spawns, a Priority group's ralph
+   swarm, dia-del-juicio's dual judges) an explicit time budget in the spawn prompt — a concrete
+   "Finish this in ~Nm" when you can estimate it, otherwise the bare instruction "Time matters
+   here: do not spend time that can be avoided, and the earlier a correct result is obtained,
+   the better." Bounded parallel agents hold quality close to unbounded ones while finishing
+   sooner — an unbounded swarm is free to burn tokens polishing past the point of diminishing
+   return, which is exactly the pattern behind past token-cost blowups in this pipeline.
    [Teams-mode discipline] Do NOT pass a `name` to the Agent/Task calls that launch ralph,
    evaluator, guardian-angel, or judges. On a machine with
    `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` set, a named spawn becomes a persistent background
