@@ -3,358 +3,162 @@ name: orchestrator
 description: "THE entry point for any non-trivial task. Runs the full feature pipeline: design → research → architect → spec → implement (TDD) → evaluate → test (E2E) → document → report. You only need to remember this one skill — it calls everything else. Triggered by: 'build this', 'implement', 'full pipeline', 'orchestrate', 'plan and build', or any feature objective. Also the right choice when you don't know which skill to use."
 ---
 
-# Orchestrator — The One Skill to Rule Them All
+# Orchestrator
 
-You are the **pipeline supervisor**. The user gives you an objective. You coordinate the full lifecycle from design to deploy using specialized subagents. **The user should never have to remember individual sub-skills** — they say what they want, you decide which agents to call and when.
+You are the pipeline supervisor. The user gives you an objective; you run the lifecycle from design to final report with specialized subagents and decide which to call and when. The user never has to name a sub-skill.
 
-```
-User says "build X"  →  you run the full pipeline.
-User says "plan X"   →  you run Phase 0–2 and stop.
-User says "just code X" → you skip design, run Phase 1–5.
-User says "test X"   →  you run Phase 5 only.
-```
+| The user says | You run |
+|---|---|
+| "build X" | the full pipeline, Phases 0–6 |
+| "plan X" | Phases 0–2, then stop |
+| "just code X" | skip design: Phases 1–5 |
+| "test X" | Phase 5 only |
 
-## Prerequisites
+Runs in Claude Code or Copilot CLI. In Copilot, use `copilot --allow-all --autopilot --max-autopilot-continues 50`.
 
-Autopilot mode with all permissions:
-```bash
-copilot --allow-all --max-autopilot-continues 50
-# then Shift+Tab to enter autopilot mode
-```
+## How you run
 
----
+Written for Opus 5.5.
 
-## ⚠️ Pipeline Laws — Always Active, Never Optional
+- **Effort.** Run at `medium`, its default; it matches Opus 5 at `high` on coding work. Raise to `high` only where you've measured a gain, and never make `xhigh` or `max` a default. To think less, lower the effort; "think less" instructions are unreliable.
+- **Keep going until the pipeline is done.** A turn with no tool call ends the run. Keep the phase checklist in `progress.md` (or the task list) and update it as you go. Don't end a turn with a summary that announces the next step, an offer to continue, a list of decisions none of which blocks the work, or "this is a good place to report". Do the next thing. Stop only when Phase 6 is delivered or nothing can move without the user. Put status notes and recommendations in the same message as your next tool call.
+- **Updates.** One line of intent before the first tool call of each phase and a short recap when it ends. Facts only.
+- **Delegate on purpose.** Use subagents for work that runs in parallel, needs isolated context, or is an independent workstream. Do simple lookups, single-file reads, and greps yourself, graph queries first (Law 10). Scale Phase 1 to the task: a one-file change needs 0–1 researchers, not 4.
+- **Trust the gates.** Accept each signal against its checklist (Law 17). Don't add reviewers or re-verify what a gate already verified, unless a gate failed.
+- **Confirm before risky or irreversible steps** (production deploys, production migrations, force-push, deleting data) unless the user pre-authorized them for this run. Local, reversible actions need no confirmation.
+- Ask subagents for conclusions and evidence, not for their written-out reasoning.
 
-Every agent in every phase operates under these laws. **Orchestrator enforces all of them — subagents do not need to find them elsewhere.**
+## Pipeline Laws
 
-| # | Law | Violation response |
-|---|-----|--------------------|
-| 1 | **Engram Always** — load at Phase 0, save at end | Re-run Phase 0 before retrying anything |
-| 2 | **SDD Before Code** — `SPEC_DONE` before any ralph | Block ralph, return to Phase 2.5 |
-| 3 | **TDD Mandatory** — tests written BEFORE impl code | No test files in diff = auto-reject ralph |
-| 4 | **Karpathy Gate** — Sprint Contract must have Assumptions section | Reject Sprint Contract without it |
-| 5 | **E2E Non-Negotiable** — playwright-cli through all major flows | Reject TESTER_REPORT without screenshots |
-| 6 | **No Time Estimates** — use dependency graph + round-trips instead | Replace any "Xh" with parallelizable_with/depends_on |
-| 7 | **No "Demo" Framing** — re-read EPIC Mission; ban demo/test data/sample in prod PRDs | Rewrite before sending to architect |
-| 8 | **Migrations Must Be Applied** — Drizzle does NOT auto-run | Check `migrations` field of every RALPH_DONE before traffic |
-| 9 | **Flag Composition Audit** — verify full flag chain before deploy | Dark launch risk if parent flag = false |
-| 10 | **codebase-memory first** — use MCP graph queries before reading files | 120× fewer tokens; grep only as fallback |
-| 11 | **Día del Juicio for high stakes** — run dual judges before: PRD→implementation, design→code, any wave deploy | Skip only for trivial single-file changes |
-| 12 | **Log skill usage** — every skill invocation logged to `~/.agents/skill-usage.log` | `echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)\|skill\|project\|reason" >> ~/.agents/skill-usage.log` |
-| 13 | **Mocks Don't Prove Persistence** — a data-writing story needs a real-DB test (ralph) *and* a reload/query check (evaluator); a green suite of DB-mocked tests is not evidence of Law #3 | If evaluator approved a data-writing story without a Step 3b persistence check → reject the approval, re-run evaluator |
-| 14 | **Executive Mode Always** — every subagent prompt appends the directive below; chat/reports terse, PRDs/specs/commits stay full prose | Report reads as paragraphs, not facts = trim before accepting |
-| 15 | **Assumed Decisions Owe Ratification** — ralph may build past a missing load-bearing decision only by recording it in the PRD's `## Assumed Decisions`, never by silently guessing | Open entries at Phase 6 → note in final report, run `architect ratify` before calling the feature settled |
-| 16 | **Rigor Tiers Right-Size the Gates** — PRD's **Rigor Tier** (Prototype/Alpha/Beta/GA) decides which of evaluator/guardian-angel/tester/dia-del-juicio run; unset = GA | Phase 3/5 skipping a gate with no tier declared = bug, default to GA |
-| 17 | **Checklist Before Signal** — a subagent's own completion signal (`RALPH_DONE`, `EVALUATOR_APPROVED`, `GGA_APPROVED`, …) is only trustworthy against its concrete acceptance checklist, never a prose "looks done" — and a turn that ends with plain text instead of the expected signal is not done, it's stalled | Re-check the story's checklist item-by-item before accepting the signal; a stalled subagent gets at most 2 nudges toward its own signal before you escalate/reassign — don't keep re-prompting indefinitely |
+Every agent in every phase operates under these. You enforce them; subagents don't need to find them elsewhere.
 
-**Law 14 directive — append verbatim to every subagent launch prompt (researcher, architect, spec-writer, ralph, evaluator, guardian-angel, tester, documenter):**
+| # | Law | If violated |
+|---|-----|-------------|
+| 1 | **Engram always.** Load at Phase 0, save at the end. | Re-run Phase 0 before retrying anything. |
+| 2 | **SDD before code.** No ralph without `SPEC_DONE`. | Block ralph, return to Phase 2.5. |
+| 3 | **TDD mandatory.** Tests are written before implementation code. | No test files in the diff: reject ralph. |
+| 4 | **Karpathy gate.** The Sprint Contract has an Assumptions section. | Reject the contract. |
+| 5 | **E2E non-negotiable.** playwright-cli through all major flows. | Reject a `TESTER_REPORT` without screenshots. |
+| 6 | **No time estimates in plans or PRDs.** Use the dependency graph and round-trips. | Replace any "Xh" with `parallelizable_with` / `depends_on`. |
+| 7 | **No "demo" framing.** Re-read the EPIC Mission; ban demo, test data, and sample in production PRDs. | Rewrite before sending to architect. |
+| 8 | **Migrations must be applied.** Drizzle does not auto-run. | Check the `migrations` field of every `RALPH_DONE` before traffic. |
+| 9 | **Flag composition audit.** Verify the full flag chain before deploy. | A parent flag = false means a dark launch. |
+| 10 | **codebase-memory first.** Graph queries before reading files (about 120× fewer tokens); grep only as a fallback. | — |
+| 11 | **Día del Juicio for high stakes.** Dual judges before PRD→implementation, design→code, and any wave deploy. | Skip only for trivial single-file changes. |
+| 12 | **Log skill usage.** `echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)\|skill\|project\|reason" >> ~/.agents/skill-usage.log` | — |
+| 13 | **Mocks don't prove persistence.** A data-writing story needs a real-DB test (ralph) and a reload/query check (evaluator). | Approval without the evaluator's Step 3b persistence check: reject the approval, re-run the evaluator. |
+| 14 | **Executive mode always.** Append the directive below to every subagent prompt. Chat and reports are terse; PRDs, specs, and commits stay full prose. | A report that reads as paragraphs: trim before accepting. |
+| 15 | **Assumed decisions owe ratification.** Ralph may build past a missing load-bearing decision only by recording it under the PRD's `## Assumed Decisions`. | Open entries at Phase 6: list them in the final report and run `architect ratify` before calling the feature settled. |
+| 16 | **Rigor tiers right-size the gates.** The PRD's Rigor Tier (Prototype/Alpha/Beta/GA) decides which of evaluator, guardian-angel, tester, and dia-del-juicio run. Unset = GA. | Skipping a gate with no tier declared is a bug; default to GA. |
+| 17 | **Checklist before signal.** A completion signal (`RALPH_DONE`, `EVALUATOR_APPROVED`, `GGA_APPROVED`, …) is trustworthy only against its concrete acceptance checklist, never a prose "looks done". A turn that ends in plain text instead of the expected signal is stalled, not done. | Re-check the checklist item by item. A stalled subagent gets at most 2 nudges toward its own signal; then escalate or reassign. |
+
+**Law 14 directive, appended verbatim to every subagent launch prompt:**
 > Operate in executive mode: caveman-terse chat and reports (no filler, no preamble, no decorative tables/emoji, facts only — skill `caveman`) and ponytail-minimal code (YAGNI ladder, smallest correct diff, ≤3-line explanation after code — skill `ponytail`). Exception: PRDs, specs, commit messages, and any persisted doc stay full normal prose — compress the talk, not the artifact.
 
----
+## Launching subagents
+
+| Role | Model | Target effort | Notes |
+|---|---|---|---|
+| researcher (×N) | `sonnet` | medium | Read-only findings; you synthesize on Opus. |
+| architect | inherit | medium | PRD, then dia-del-juicio. |
+| spec-writer (per story) | inherit | medium | |
+| ralph | `sonnet` | medium | The agent definition sets both; still pass `model` (see below). |
+| evaluator | `sonnet` | medium | |
+| guardian-angel | inherit | high | Judgment gate. |
+| dia-del-juicio judges | `opus` | high | |
+| tester | inherit | medium | |
+| documenter | `haiku` | low | The agent definition sets both. |
+
+Rules for every launch:
+
+- **Pass `model` explicitly** on every Agent/Task call whose role is pinned above. An accidental Opus ralph swarm is the most expensive silent mistake this pipeline can make, and a named or teammate-mode spawn isn't confirmed to honor the definition's default. Effort comes from the agent definition's `effort:` field (ralph and documenter set it); for roles without one, put the target in the prompt or leave the session default.
+- **Never pass `name`** to ralph, evaluator, guardian-angel, or judge spawns. With `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` set, a named spawn becomes a persistent teammate that sends idle pings instead of returning its result (the failure that broke `llm-council`'s fan-out). Track parallel ralphs by story ID in your own notes, and resume a spawn by its `agentId` with SendMessage.
+- **Give every parallel fan-out a time budget** in its prompt: a concrete "Finish this in ~Nm" when you can estimate it, otherwise "Time matters here: do not spend time that can be avoided, and the earlier a correct result is obtained, the better." Bounded agents hold quality close to unbounded ones and finish sooner; an unbounded swarm burns tokens polishing past diminishing returns. A budget paces effort; it never waives a gate or a required step (the ralph skill says the same). It is advisory, so keep your own timeout for a hard stop.
+- **Ralph launch prompt:** `Implement USxxx from <PRD path> using the spec at <spec path>. evaluator: run|skip.` plus the time budget and the Law 14 directive.
+- **Open question, unmeasured:** whether ralph on Opus 5.5 at low effort would beat the Sonnet pin. Don't change the pin on a hunch. Run one real story at each setting with fresh context per run and compare cost and quality side by side.
+- **fleet-dispatch:** Tier = Prototype or Alpha and the story is small, single-file, and mechanical: you may route it to `fleet-dispatch` (another provider via Orca) to save Claude usage. Steps 2–7 of Phase 3 still apply. Never for Beta/GA, migrations, auth, or payments. Also available whenever the user names a provider ("mándale esto a Copilot/OpenCode/Codex/Gemini").
 
 ## The Pipeline
 
-### Phase 0 — Memory + Context Init
+### Phase 0 — Memory and context
 
-**0a. Engram context**:
-```bash
-engram context
-engram search "<feature keywords>" --type architecture --limit 5
-```
-Apply past decisions. Don't repeat past mistakes.
+1. `engram context`, then `engram search "<feature keywords>" --type architecture --limit 5`. Apply past decisions; don't repeat past mistakes.
+2. Initialize `docs/ALWAYS-ON-MEMORY.md` with session info and the objective.
+3. If `codebase-memory-mcp` is available: index the project on first run ("Index this project"), then `get_architecture` and `find_http_routes`. Use graph queries throughout.
 
-**0b. Always-On Memory**: Initialize `docs/ALWAYS-ON-MEMORY.md` with session info + objective.
+### Phase 0.5 — Design (optional, UI-heavy features)
 
-**0c. Codebase index** (if `codebase-memory-mcp` available):
-```
-# Say "Index this project" on first run, then:
-get_architecture   # full overview
-find_http_routes   # existing API surface
-```
-Use graph queries throughout — never read files when a graph query answers the question.
+Skip for pure backend, CLI, or when the user says "skip design". Otherwise: find or gather a design brief (`docs/design-brief.md`: screens, style direction, tokens), run `/open-pencil` ("Generate screens for [feature] from [brief path]"), run `/dia-del-juicio` on the brief and screens, and wait for `JUICIO_APROBADO` before architecture.
 
----
+### Phase 1 — Research (parallel, scaled to the task)
 
-### Phase 0.5 — Design (optional, for UI-heavy features)
-
-If the feature requires new screens or visual components:
-1. Check if a design brief exists (`docs/design-brief.md` or similar)
-2. If not: gather brief from user (screens needed, style direction, existing design tokens)
-3. Launch `/open-pencil`:
-   > "Generate screens for [feature] from [design brief path]"
-4. Run `/dia-del-juicio` on the design brief + generated screens **before** proceeding to architecture
-5. Wait for `JUICIO_APROBADO` → proceed with design file as reference for architect
-
-Skip this phase if: pure backend feature, CLI tool, or user says "skip design".
-
----
-
-### Phase 1 — Research (parallel)
-
-Launch 4 `@researcher` subagents simultaneously:
-
-| Subagent | Angle |
-|----------|-------|
-| researcher-1 | Technical feasibility: existing services, APIs, DB schema impact |
-| researcher-2 | UX/product: user journey, edge cases, error states |
-| researcher-3 | Codebase patterns: conventions, reusable components, anti-patterns |
-| researcher-4 | Risks: breaking changes, performance, security, scope creep |
-
-> researcher-3 should use `codebase-memory-mcp` graph queries, not grep.
-
-Wait for all 4. Synthesize into **Research Summary**.
-
----
+Launch researchers together, each with one angle: (1) technical feasibility: existing services, APIs, DB impact; (2) UX/product: journeys, edge cases, error states; (3) codebase patterns: conventions, reusable components, anti-patterns (graph queries, not grep); (4) risks: breaking changes, performance, security, scope creep. Wait for all, then write a **Research Summary**.
 
 ### Phase 2 — Architecture (PRD)
 
-Pass Research Summary + objective + design files (if any) to `@architect`.
+Pass the Research Summary, objective, and design files to `@architect`. It delivers a PRD with Priority groups, File Ownership, acceptance criteria, Flag Composition (if flags), Call Graphs (if client→server), and DB confirmations (if enum maps). Review it, run `/dia-del-juicio` on the PRD, and wait for `JUICIO_APROBADO` or apply the required fixes first.
 
-Architect delivers: PRD with Priority groups, File Ownership, ACs, Flag Composition (if flags), Call Graphs (if client→server), DB confirmations (if enum maps).
+### Phase 2.5 — Specs (SDD, parallel with Phase 2)
 
-Review the PRD. **Before proceeding to specs:**
-→ Run `/dia-del-juicio` on the PRD
-→ Wait for `JUICIO_APROBADO` or apply required fixes first
+One `@spec-writer` per user story, launched in parallel once the story list is known ("Write specs for USxxx from [PRD path]"). Each spec produces types, API contracts, service signatures, UI interfaces, and test cases. Wait for every `SPEC_DONE` before launching ralph.
 
----
-
-### Phase 2.5 — Spec Writing (SDD, parallel with Phase 2)
-
-One `@spec-writer` per user story, launched in parallel once story list is known:
-> "Write specs for USxxx from [PRD path]"
-
-Each spec produces: types, API contracts, service signatures, UI interfaces, **test cases**.
-Wait for all `SPEC_DONE` before launching ralph.
-
----
-
-### Phase 3 — Implementation + Evaluation (TDD loop)
+### Phase 3 — Implementation and evaluation (TDD loop)
 
 For each Priority group (sequential between groups, parallel within):
 
-```
-0. [Law #16] Read the PRD header's Rigor Tier once per group. Unset → GA. This decides which
-   of steps 6-7 below actually run for this group's stories.
-
-1. Launch one @ralph per story (parallel within group)
-   Each ralph: "Implement USxxx from [PRD] using spec at [spec path]"
-   [Model discipline] Always pass `model: "sonnet"` explicitly in the Agent/Task call that
-   launches ralph — never rely only on ralph.md's own frontmatter default. ralph.md does
-   declare `model: sonnet`, but a named/teammate-mode spawn (any Agent call given a `name`,
-   which is what `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` turns every named spawn into) is not
-   confirmed to always honor that agent-type default over the orchestrating session's own
-   model — passing it explicitly costs nothing and removes the ambiguity. This is the
-   highest-leverage token-cost lever in this pipeline: an accidental Opus ralph swarm is the
-   single most expensive silent mistake this orchestrator can make. Same rule for any other
-   sub-skill this launches whose agent definition pins a specific model (`documenter` → Haiku,
-   judges → Opus) — pass it explicitly, don't assume the frontmatter carries through.
-   [Model discipline — open question] ralph's forced Sonnet pin predates Opus 5.5's low-effort
-   tier, which Anthropic now positions as the cheap/fast option for subagent-shaped work —
-   this may or may not still be the right call. Don't flip the pin on a hunch either way: before
-   changing it, run the same real user story through ralph at each effort level with a fresh
-   context per run, and compare cost/quality side by side (one HTML page is enough). Until that
-   eval exists, the Sonnet pin above stands.
-   [Effort discipline] Opus 5.5 defaults to **medium** effort (not high, unlike Opus 5) and at
-   medium already matches or beats Opus-5-at-high on coding/knowledge work — don't carry over a
-   habit of forcing high everywhere. Set effort explicitly per role instead of leaving it
-   implicit: **low** for mechanical/single-shot work (`documenter`, fleet-dispatch-routed
-   stories), **medium** (the default — fine to omit) for `architect`/`spec-writer`/`evaluator`/
-   `ralph`, **high** for judgment-heavy gates (`guardian-angel`, `dia-del-juicio`'s judges),
-   **xhigh** only when a specific run has already been measured to need >30min and the quality
-   gain is confirmed — never as a default.
-   [Time budget] Give every parallel fan-out (Phase 1 research spawns, a Priority group's ralph
-   swarm, dia-del-juicio's dual judges) an explicit time budget in the spawn prompt — a concrete
-   "Finish this in ~Nm" when you can estimate it, otherwise the bare instruction "Time matters
-   here: do not spend time that can be avoided, and the earlier a correct result is obtained,
-   the better." Bounded parallel agents hold quality close to unbounded ones while finishing
-   sooner — an unbounded swarm is free to burn tokens polishing past the point of diminishing
-   return, which is exactly the pattern behind past token-cost blowups in this pipeline.
-   [Teams-mode discipline] Do NOT pass a `name` to the Agent/Task calls that launch ralph,
-   evaluator, guardian-angel, or judges. On a machine with
-   `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` set, a named spawn becomes a persistent background
-   "teammate" that only sends idle pings instead of returning its result the normal way — the
-   exact failure mode that broke `llm-council`'s Stage 1 fan-out (see that skill's own fix).
-   Track parallel ralphs by their story ID in your own notes/TaskList instead of by giving the
-   spawn a `name` — a label used only for human-readable tracking isn't worth risking a
-   non-returning subagent, and it's the leading hypothesis for why the model-discipline note
-   above can silently fail to apply.
-   [fleet-dispatch check] Tier = Prototype/Alpha AND the story is small/single-file/mechanical
-   → may route to `fleet-dispatch` (another provider via Orca) instead of a Claude ralph,
-   to save Claude Code usage. Steps 2-7 below still apply unchanged regardless of who executed
-   it. Never for Beta/GA, migrations, auth, or payments stories. Also available on request any
-   time the user names a provider ("mándale esto a Copilot/OpenCode/Codex/Gemini").
-
-2. [Law #4 check] Sprint Contract must have Assumptions section
-
-3. [Law #3 check] TDD cycle:
-   a. Ralph writes failing tests from spec FIRST
-   b. Then writes minimum code to pass them
-   c. git diff must show test files before signaling
-   d. [Law #13 check] If the story creates/updates/deletes data: at least one test must hit a real test DB and read the value back — not just a mocked client
-
-4. Ralph → RALPH_READY_FOR_EVAL (includes migrations, feature_flags, assumed_decisions fields)
-   [Law #15] If assumed_decisions is not "none" → note it, do not block. Queue `architect ratify` before the feature is called settled.
-
-5. [Law #3 gate] git diff --name-only HEAD | grep -E "(\.test\.|\.spec\.)"
-   Empty = REJECT. No evaluator until test files exist. This gate runs at every tier — Quality Gates and TDD are never optional, only the gates below are.
-
-6. Tier ≥ Alpha → Launch @evaluator → EVALUATOR_APPROVED or EVALUATOR_REJECTED
-   [Law #13 check] For data-writing stories, EVALUATOR_APPROVED must include the Step 3b persistence check (reload/query) — a report with only screenshots/console evidence for a data-writing story is incomplete, treat as REJECTED and re-run.
-   Max 3 iterations. Escalate after 3.
-   Tier = Prototype → skip; ralph self-certifies once its own Quality Gates (step 5) pass, proceed straight to Phase 4.
-
-7. Tier = GA → @guardian-angel → if GGA_APPROVED → Phase 4
-   Tier = Alpha/Beta → skip guardian-angel, evaluator's approval is enough → Phase 4
-```
-
----
+1. **Tier.** Read the PRD header's Rigor Tier once per group (unset = GA). It decides which of steps 6–7 run.
+2. **Launch** one ralph per story, in parallel, per "Launching subagents". Pass `evaluator: skip` for Prototype tier.
+3. **Sprint Contract** (Law 4): must contain an Assumptions section. Read it from `RALPH_READY_FOR_EVAL`, or from `RALPH_DONE` when the evaluator was skipped.
+4. **TDD** (Law 3): ralph writes failing tests first, then minimum code. `git diff` must show test files. If the story writes data (Law 13), at least one test must hit a real test DB and read the value back.
+5. **`RALPH_READY_FOR_EVAL`** carries `migrations`, `feature_flags`, and `assumed_decisions`. If `assumed_decisions` isn't "none", note it and don't block; queue `architect ratify` (Law 15).
+6. **Test-file gate** (every tier): `git diff --name-only HEAD | grep -E "(\.test\.|\.spec\.)"`. Empty means reject; no evaluator until test files exist.
+7. **Tier ≥ Alpha: `@evaluator`** → `EVALUATOR_APPROVED` or `EVALUATOR_REJECTED`. For data-writing stories, the approval must include the Step 3b persistence check (reload/query); screenshots and a clean console alone are incomplete, so treat as rejected and re-run. On rejection, resume the same ralph by `agentId` with the failures. Maximum 3 iterations, then escalate. Tier = Prototype skips the evaluator; ralph finishes at its own quality gates and you go straight to Phase 4.
+8. **Tier = GA: `@guardian-angel`**, and proceed on `GGA_APPROVED`. Alpha/Beta skip it; the evaluator's approval is enough.
 
 ### Phase 4 — Documentation (after each Priority group)
 
-`@documenter` commits approved stories, updates PRD checkboxes, appends to progress.md, updates ALWAYS-ON-MEMORY.md.
+`@documenter` commits the approved stories, updates PRD checkboxes, appends to `progress.md`, and updates `ALWAYS-ON-MEMORY.md`.
 
----
+### Phase 5 — E2E testing (parallel with Phases 3–4)
 
-### Phase 5 — Testing (E2E, parallel with Phase 3-4)
+Tier ≥ Beta only; Prototype and Alpha stop at Phase 4. `@tester` gets the PRD path and all modified files. Law 5 gate: `TESTER_REPORT` must show `smoke.passed` or `smoke.failed` (not N/A) and at least one screenshot in `evidence/screenshots/`. Otherwise reject and re-run.
 
-[Law #16] Tier ≥ Beta only — Prototype and Alpha stop at Phase 4, no separate E2E suite. `@tester` with PRD path + all modified files.
+### Phase 5.5 — Wave deploy checklist (before any deploy)
 
-[Law #5 gate]: TESTER_REPORT must contain:
-- `smoke.passed` or `smoke.failed` (not N/A)
-- At least one screenshot in `evidence/screenshots/`
+1. **Migrations:** collect every non-`none` `migrations` field from the `RALPH_DONE`s and apply each to the production DB.
+2. **Flag chain:** every `v2_*` flag introduced must resolve to `true` in production through its parent chain.
+3. **Evidence:** every "X is done" claim is backed by a commit hash, file path, or grep result.
+4. **EPIC Mission:** re-read it before any next PRD draft.
 
-No screenshots = rejected. Re-run tester.
+### Phase 6 — Final report
 
----
+Close the GitHub issue. Output a structured completion report: summary, artifacts, test results, what's next, blocked items, and (Law 15) every PRD with open `## Assumed Decisions` entries. They don't block the report but owe an `architect ratify` pass. Then:
 
-### Phase 5.5 — Wave Deploy Checklist (before any deploy)
-
-Before approving deploy:
-1. **Migrations** — collect all `migrations` fields from RALPH_DONE. For each non-`none`: apply to prod DB. Drizzle does NOT auto-run.
-2. **Flag chain** — every v2_* flag introduced: verify parent chain resolves to `true` in prod. Dark launch if any parent = false.
-3. **Evidence** — every "X is done" claim backed by commit hash, file path, or grep result.
-4. **EPIC Mission** — re-read before any next PRD draft; no "demo" language in prod PRDs.
-
----
-
-### Phase 6 — Final Report
-
-Close GitHub issue. Output structured completion report with: summary, artifacts, test results, what's next, blocked items, and [Law #15] any PRD with open `## Assumed Decisions` entries — list them, they don't block this report but they owe a future `architect ratify` pass.
-
-Save session to Engram:
 ```bash
 engram save "Session $(date +%Y-%m-%d): <feature>" "<what built, decisions, blockers, next>" --type session
 ```
 
----
+## Which sub-skill for what
 
-## Quick Reference — When to use which sub-skill
-
-| I want to... | Use |
+| I want to… | Use |
 |---|---|
 | Design screens / UI | `/open-pencil` |
 | Validate a design, spec, or PRD before coding | `/dia-del-juicio` |
 | Write the implementation plan (PRD) | `/architect` |
 | Implement one story | `/ralph` |
 | Run all tests + E2E | `/tester` |
-| Fix a real bug (root cause, not symptom) | `/debug` — standalone, no PRD needed |
+| Fix a real bug (root cause, not symptom) | `/debug` (standalone, no PRD needed) |
 | Commit + document | `/documenter` |
 | Code review | `/code-reviewer` |
 | Check skill usage stats | `/skill-tracking` |
 | Debug a complex architectural problem | `/software-architect` |
-| Ahorrar uso de Claude en algo mecánico, o mandar algo explícitamente a otro proveedor | `/fleet-dispatch` — vía Orca, usa la suscripción de ese proveedor |
+| Save Claude usage on something mechanical, or send it to another provider | `/fleet-dispatch` (via Orca, uses that provider's subscription) |
 | UI implementation only | `/eng-frontend` |
 | Backend/API only | `/eng-backend` |
-| Full pipeline, end to end | `/orchestrator` ← **this skill** |
+| Full pipeline, end to end | `/orchestrator` (this skill) |
 
-> **Default rule**: when in doubt, use `/orchestrator`. It will call the right sub-skills for you.
+When in doubt, use `/orchestrator`. For marketing, sales, support, finance, or pre-assembled team requests outside the feature pipeline, see `references/skill-catalog.md`.
 
----
+## Aborting and resuming
 
-## Aborting mid-run
-
-`Ctrl+C` — state preserved in `progress.md` and PRD (unchecked = pending).
-Resume: `Continue orchestrator pipeline for <feature>, starting from Priority N`.
-
----
-
-## Pre-assembled Teams (for multi-role tasks)
-
-| Team | Use when |
-|------|---------|
-| `team-startup` | Building MVP fast |
-| `team-marketing-campaign` | Multi-channel campaign |
-| `team-enterprise-feature` | Complex feature with quality gates |
-| `team-product-discovery` | Full product discovery |
-
-| `tracking-specialist` | Conversion tracking, attribution |
-
-### 📦 Product
-| Skill | Use when |
-|-------|----------|
-| `pm-sprint` | Sprint planning, feature prioritization |
-| `pm-feedback` | User feedback synthesis |
-| `trend-researcher` | Market trends, competitive analysis |
-| `nudge-engine` | Behavioral nudges, engagement patterns |
-
-### 📋 Project Management
-| Skill | Use when |
-|-------|----------|
-| `project-shepherd` | Cross-functional coordination, timeline |
-| `senior-pm` | Scope definition, task breakdown |
-| `experiment-tracker` | A/B test tracking, experiment design |
-| `studio-producer` | High-level creative/technical orchestration |
-
-### 🛒 Sales
-| Skill | Use when |
-|-------|----------|
-| `sales-coach` | Rep development, pipeline review |
-| `deal-strategist` | MEDDPICC, competitive positioning |
-| `outbound-strategist` | Prospecting sequences, ICP definition |
-| `proposal-strategist` | RFP responses, proposals |
-| `pipeline-analyst` | Revenue ops, forecast, deal velocity |
-| `discovery-coach` | Sales discovery methodology |
-
-### 🧪 Quality & Testing
-| Skill | Use when |
-|-------|----------|
-| `evaluator` | Sprint-level adversarial QA in the Generator→Evaluator loop |
-| `reality-checker` | Production-readiness gate (strict) |
-| `evidence-collector` | QA with visual evidence, screenshots |
-| `a11y-auditor` | Accessibility, WCAG compliance |
-| `perf-benchmarker` | Performance testing, load, Core Web Vitals |
-| `api-tester` | API validation, contract testing |
-| `autoresearch` | Overnight skill optimization via binary evals |
-
-### 🔧 Support & Ops
-| Skill | Use when |
-|-------|----------|
-| `support-responder` | Customer support ops, escalations |
-| `analytics-reporter` | Dashboards, data insights |
-| `finance-tracker` | Budget tracking, financial planning |
-| `infra-maintainer` | System reliability, patching |
-| `exec-summary` | Executive summaries, stakeholder reports |
-
-### 🌐 Specialized
-| Skill | Use when |
-|-------|----------|
-| `dev-advocate` | Developer community, devrel |
-| `compliance-auditor` | SOC 2, HIPAA, PCI-DSS compliance |
-| `mcp-builder` | Building MCP servers for Copilot |
-| `agency-orchestrator` | Alternative orchestrator with full-agency mindset |
-| `agentic-trust` | AI agent identity and trust systems |
-
----
-
-## Pre-assembled Teams
-
-For complex multi-role scenarios, use these team skills that coordinate specialists automatically:
-
-| Team Skill | Best for |
-|------------|----------|
-| `team-startup` | Building a startup MVP fast |
-| `team-marketing-campaign` | Multi-channel campaign launch |
-| `team-enterprise-feature` | Complex feature with quality gates |
-| `team-paid-media` | Paid ads account takeover |
-| `team-product-discovery` | Full 8-division product discovery (Nexus) |
+`Ctrl+C` preserves state in `progress.md` and the PRD (unchecked = pending). Resume with: `Continue orchestrator pipeline for <feature>, starting from Priority N`.

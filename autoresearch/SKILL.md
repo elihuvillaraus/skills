@@ -63,6 +63,7 @@ Create `/tmp/autoresearch-<skill>-evals.md` with binary test cases:
 - Deterministic — same input always gives same answer
 - Independent — each test case stands alone
 - Measurable — can be checked programmatically
+- Whole-directory — grep the entire skill directory (`SKILL.md` and `references/`), not `SKILL.md` alone, so guidance filed under `references/` still counts
 
 Example good assertions:
 ```bash
@@ -82,6 +83,7 @@ Run each test case against the current skill. Record:
 ```
 Baseline pass rate: X/N (XX%)
 Failing cases: TC003, TC007, TC012
+Baseline size: <lines in SKILL.md>   (record with `wc -l SKILL.md`)
 ```
 
 ---
@@ -100,6 +102,8 @@ Pick the hypothesis most likely to improve pass rate without hurting passing cas
 ## Phase 2 — Variant Creation (ONE change at a time)
 
 Make EXACTLY ONE change to the skill. This is the most important rule — never change two things at once or you can't attribute improvement.
+
+Where the change goes: if the skill has a `references/` folder, add new conditional guidance (checks that only apply to one kind of task) to the matching section of the reference file, and keep `SKILL.md` for the core flow. Every added line in `SKILL.md` is loaded on every run of the skill; reference files are read only when relevant. Adding passing text is easy; a skill that stays short and clear is worth more than one more passing test.
 
 ```bash
 # Backup current version
@@ -136,7 +140,7 @@ Delta: +X cases
 **If improved** (pass rate went UP):
 ```bash
 cd ~/.agents/skills/<skill>
-git add SKILL.md
+git add -A .
 git commit -m "autoresearch: improve <skill> (+X pass rate)
 
 Change: [one sentence description]
@@ -253,3 +257,4 @@ Goal: >80%
 3. **Commit improvements immediately** — git is your checkpoint system
 4. **Binary assertions only** — no subjective scoring
 5. **Document every variant** — even discarded ones, in the report
+6. **SKILL.md size budget** — a variant may not grow `SKILL.md` by more than 5 lines over the baseline size recorded in Phase 0.3. Guidance that needs more room goes to `references/`; if the skill has none, trim equivalent lines elsewhere or discard the variant. Same-score variants that only add text are discarded as usual
