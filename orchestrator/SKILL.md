@@ -59,7 +59,8 @@ Every agent in every phase operates under these. You enforce them; subagents don
 
 | Role | Model | Target effort | Notes |
 |---|---|---|---|
-| researcher (×N) | `sonnet` | medium | Read-only findings; you synthesize on Opus. |
+| scout (×N) | `haiku` | low | Haiku 5.5: lookups, grep sweeps, file inventories, log/doc summaries, classification, one-fact questions. Never decides; returns facts. |
+| researcher (×N) | `sonnet` | medium | Read-only findings that need judgment; you synthesize on Opus. |
 | architect | inherit | medium | PRD, then dia-del-juicio. |
 | spec-writer (per story) | inherit | medium | |
 | ralph | `sonnet` | medium | The agent definition sets both; still pass `model` (see below). |
@@ -71,6 +72,7 @@ Every agent in every phase operates under these. You enforce them; subagents don
 
 Rules for every launch:
 
+- **Haiku 5.5 (`claude-haiku-5-5`, $0.10/$0.50 per MTok ≤100k, ~75% below Haiku 4.5; reads $0.01):** use it for the volume work above, summaries/compaction, DB queries, browser automation and screenshot checks. Its Terminal-Bench is 39% against Sonnet's 71%, so never ralph, architect, evaluator or any judge. Rule: if a wrong answer is cheap to spot, use haiku; if it ships, use sonnet or better.
 - **Pass `model` explicitly** on every Agent/Task call whose role is pinned above. An accidental Opus ralph swarm is the most expensive silent mistake this pipeline can make, and a named or teammate-mode spawn isn't confirmed to honor the definition's default. Effort comes from the agent definition's `effort:` field (ralph and documenter set it); for roles without one, put the target in the prompt or leave the session default.
 - **Never pass `name`** to ralph, evaluator, guardian-angel, or judge spawns. With `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` set, a named spawn becomes a persistent teammate that sends idle pings instead of returning its result (the failure that broke `llm-council`'s fan-out). Track parallel ralphs by story ID in your own notes, and resume a spawn by its `agentId` with SendMessage.
 - **Give every parallel fan-out a time budget** in its prompt: a concrete "Finish this in ~Nm" when you can estimate it, otherwise "Time matters here: do not spend time that can be avoided, and the earlier a correct result is obtained, the better." Bounded agents hold quality close to unbounded ones and finish sooner; an unbounded swarm burns tokens polishing past diminishing returns. A budget paces effort; it never waives a gate or a required step (the ralph skill says the same). It is advisory, so keep your own timeout for a hard stop.
