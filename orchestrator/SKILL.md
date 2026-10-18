@@ -90,6 +90,10 @@ Rules for every launch:
 2. Initialize `docs/ALWAYS-ON-MEMORY.md` with session info and the objective.
 3. If `codebase-memory-mcp` is available: index the project on first run ("Index this project"), then `get_architecture` and `find_http_routes`. Use graph queries throughout.
 
+### Phase 0.1 — Ambition gate
+
+Run the `ambicion` skill before designing or delegating: full mode for outcome-driven, client-facing, architectural or recurring work; short mode (goal beyond the goal, outside judge, model) for medium tasks; skip for one-line edits. It fixes three things the rest of the pipeline then enforces: the goal beyond the goal, the outside judge and pass criterion (evaluator, tester, `dia-del-juicio`, or a `verifica` command, never self-grading), and the model/effort per the table below. Put the result in `progress.md`. If the gate raises the task past what the user asked, or spends money or can't be undone, ask first.
+
 ### Phase 0.5 — Design (optional, UI-heavy features)
 
 Skip for pure backend, CLI, or when the user says "skip design". Otherwise: find or gather a design brief (`docs/design-brief.md`: screens, style direction, tokens), run `/open-pencil` ("Generate screens for [feature] from [brief path]"), run `/dia-del-juicio` on the brief and screens, and wait for `JUICIO_APROBADO` before architecture.
