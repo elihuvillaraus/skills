@@ -69,9 +69,13 @@ const wav = path.join(VDIR, 'voice.wav');
 fs.writeFileSync(wav, Buffer.concat([hdr, out]));
 
 // ---- word times: what the recogniser heard, matched to the script's words line by line
-const norm = (w) => w.toLowerCase().replace(/[^a-z0-9]/g, '');
+const norm = (w) => w.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 let heard = null;
-const py = spawnSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(HERE, 'voice_words.py'), wav, '--model', opt('--model', 'small.en')], { maxBuffer: 1 << 26 });
+// --lang es → multilingual model; faster-whisper runs from the uv cache (`uv run --with faster-whisper`) when it isn't pip-installed
+const LANG = opt('--lang', 'en');
+const vwArgs = [path.join(HERE, 'voice_words.py'), wav, '--model', opt('--model', LANG === 'en' ? 'small.en' : 'small'), '--lang', LANG];
+let py = spawnSync(process.platform === 'win32' ? 'python' : 'python3', vwArgs, { maxBuffer: 1 << 26 });
+if (py.status !== 0) py = spawnSync('uv', ['run', '--quiet', '--with', 'faster-whisper', 'python', ...vwArgs], { maxBuffer: 1 << 26 });
 if (py.status === 0) { try { heard = JSON.parse(py.stdout.toString().trim().split('\n').pop()); } catch { heard = null; } }
 if (!heard) console.warn('word times: faster-whisper unavailable (pip install faster-whisper) — estimating from the letters');
 let matched = 0, totalWords = 0;

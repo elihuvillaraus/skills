@@ -117,16 +117,22 @@ const labelSize = Math.round(((VERTICAL ? 60 : 40) * FW) / 1080);
 const safeBoxes = VERTICAL
   ? `drawbox=x=0:y=0:w=iw:h=${SAFE.top}:color=red@0.22:t=fill,drawbox=x=0:y=ih-${SAFE.bottom}:w=iw:h=${SAFE.bottom}:color=red@0.22:t=fill,drawbox=x=iw-${SAFE.right}:y=${SAFE.top}:w=${SAFE.right}:h=ih-${SAFE.top + SAFE.bottom}:color=red@0.22:t=fill,`
   : '';
+// some ffmpeg builds ship without libfreetype (no drawtext): sheets then go unlabelled instead of failing
+const HAS_DRAWTEXT = /\bdrawtext\b/.test(spawnSync('ffmpeg', ['-hide_banner', '-filters']).stdout?.toString() || '');
+const dt = (f) => (HAS_DRAWTEXT ? f : '');
 for (const shot of T.shots) {
   const f0 = Math.round(shot.t0 * T.fps), f1 = Math.round(shot.t1 * T.fps) - 1;
   const picks = [];
-  for (let k = 0; shot.t0 + k * 0.25 < shot.t1 - 1e-6; k++) picks.push(Math.min(f1, Math.max(f0, Math.round((shot.t0 + k * 0.25) * T.fps))));
+  // Keep long voice-led shots below ffmpeg's select-expression limit while
+  // retaining the usual quarter-second sampling for shorter shots.
+  const sampleStep = Math.max(0.25, (shot.t1 - shot.t0) / 72);
+  for (let k = 0; shot.t0 + k * sampleStep < shot.t1 - 1e-6; k++) picks.push(Math.min(f1, Math.max(f0, Math.round((shot.t0 + k * sampleStep) * T.fps))));
   const uniq = [...new Set(picks)], rows = Math.ceil(uniq.length / cols);
   const tag = `shot${String(shot.id).padStart(2, '0')}`;
   const sheet = path.join(REVIEW, `${tag}-sheet.jpg`);
   const sel = uniq.map((f) => `eq(n\\,${f})`).join('+');
   let r = spawnSync('ffmpeg', ['-v', 'error', '-y', '-framerate', String(T.fps), '-start_number', '0', '-i', path.join(ROOT, 'frames', 'f%04d.png'),
-    '-vf', `${safeBoxes}drawtext=${font}:text='%{pts\\:hms}  f%{n}':x=14:y=14:fontsize=${labelSize}:fontcolor=yellow:box=1:boxcolor=black@0.65:boxborderw=6,select='${sel}',scale=${cellW}:${cellH},tile=${cols}x${rows}`,
+    '-vf', `${safeBoxes}${dt(`drawtext=${font}:text='%{pts\\:hms}  f%{n}':x=14:y=14:fontsize=${labelSize}:fontcolor=yellow:box=1:boxcolor=black@0.65:boxborderw=6,`)}select='${sel}',scale=${cellW}:${cellH},tile=${cols}x${rows}`,
     '-frames:v', '1', '-q:v', '3', sheet], { stdio: 'inherit' });
   if (r.status !== 0) throw new Error('sheet failed for shot ' + shot.id);
   const refs = (REF_FOR[shot.id] || []).map(refPath).filter((p) => fs.existsSync(p));

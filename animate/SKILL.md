@@ -79,6 +79,9 @@ Ask at intake (question 3). With a voice, **the voice is the clock**: each beat 
 
 ## Music: the user's own track (optional)
 
+**Where tracks come from:** a local library of 335 music tracks and 57 sound effects (`~/Docs/SaaS/assets/audio-library`, search with `python3 -I ~/.claude/skills/marcus-audio/scripts/library.py --type music --tag Calma`), or a bed made to measure with Suno via `marcus-audio`. Library sfx (whooshes, UI clicks, impacts) can go in `assets/` and be mixed as files; check the licence note in marcus-audio before a client deliverable.
+**Shaping a track to the arc:** a song rarely has a silence where the story needs one. Cut the track with ffmpeg before `beats.mjs`: fade it out into the pause before the payoff, insert silence, and resume on the hit with the song's ending section (`atrim` + `anullsrc` + `concat`), then shape gain (`volume='if(lt(t,..),..)':eval=frame`) so the payoff act is the loudest and the goodbye decays. With a voice-over the score keeps only `to = 's'` effects. Proven on chatia-engie (2026-10-08).
+
 Ask at intake (question 6). Without a track the score is composed in code on a 120 BPM grid. With one:
 1. Put it in the piece: `pieces/<name>/audio/track.wav` (WAV, MP3 or M4A), and in `piece.json`: `"music": { "file": "audio/track.wav", "start": 12.0, "gain": 0, "fade": 0.5 }` (`start` = where in the song the piece begins).
 2. `node tools/beats.mjs pieces/<name>/audio/track.wav pieces/<name> --start 12 --dur <piece length>` → `beats.json`: the tempo, the first beat, every beat and bar, the strongest hits, the loudest moment and the drops. Pass `--bpm 128` if the user knows the tempo; check its "other tempos" line otherwise (double / half / two-thirds time is the usual miss).
