@@ -57,6 +57,8 @@ Every agent in every phase operates under these. You enforce them; subagents don
 
 ## Launching subagents
 
+This table is mirrored in `~/.claude/AGENTS.md` (section "Modelos y orquestación") so subagents that never load this skill still follow it. Change both together.
+
 | Role | Model | Target effort | Notes |
 |---|---|---|---|
 | scout (×N) | `haiku` | low | Haiku 5.5: lookups, grep sweeps, file inventories, log/doc summaries, classification, one-fact questions. Never decides; returns facts. |
