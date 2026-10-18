@@ -151,6 +151,9 @@ engram save "Session $(date +%Y-%m-%d): <feature>" "<what built, decisions, bloc
 | I want to… | Use |
 |---|---|
 | Design screens / UI | `/open-pencil` |
+| Raise a task's ambition (goal beyond the goal, outside judge, model) | `/ambicion` |
+| Scroll-driven 3D landing / immersive brand experience, or its walkthrough video | `/scroll-world` (video derivatives: `/animate`, `/hyperframes-helper`) |
+| Brand/person voice sheet before writing content | `/voice-md` |
 | Validate a design, spec, or PRD before coding | `/dia-del-juicio` |
 | Write the implementation plan (PRD) | `/architect` |
 | Implement one story | `/ralph` |
